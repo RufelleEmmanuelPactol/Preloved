@@ -8,6 +8,8 @@ from django.core.files.base import ContentFile
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 # Create your views here.
 
+
+
 class Storage(View):
 
     # posts a new resource

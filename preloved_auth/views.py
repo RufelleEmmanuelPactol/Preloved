@@ -15,7 +15,30 @@ from django.core.files.base import ContentFile
 from datetime import datetime
 
 
+class LoginController:
 
+    def loginAPI(self, request):
+        result = assert_post(request)
+        if result:
+            return result
+        u = authenticate(username=request.POST['email'], password=request.POST['password'])
+        if u is not None:
+            login(request, u)
+            return JsonResponse({'status': 'OK!'})
+        return JsonResponse({'error': 'Invalid credentials', 'sessionID': request.session['sessionid']})
+
+    def logoutAPI(self, request):
+          if request.user.is_authenticated:
+            logout(request)
+            return JsonResponse({'status': 'OK!'})
+          return JsonResponse({'error': 'user not authenticated'})
+
+    def is_logged_in(self, request):
+        if request.user.is_authenticated:
+            return JsonResponse({'response': True})
+        return JsonResponse({'response': False})
+
+controller = LoginController()
 
 def generate_id(length=12):
     characters = string.ascii_letters + string.digits
@@ -70,26 +93,13 @@ def csrf_token(request):
 
 
 def loginAPI(request):
-    result = assert_post(request)
-    if result:
-        return result
-    u = authenticate(username=request.POST['email'], password=request.POST['password'])
-    if u is not None:
-        login(request, u)
-        return JsonResponse({'status': 'OK!'})
-    return JsonResponse({'error': 'Invalid credentials', 'sessionID': request.session['sessionid']})
-
+        return controller.loginAPI(request)
 
 
 def logout_attempt(request):
-    if request.user.is_authenticated:
-        logout(request)
-        return JsonResponse({'status': 'OK!'})
-    return JsonResponse({'error': 'user not authenticated'})
+    return controller.logoutAPI(request)
 
 
 
 def is_logged_in(request):
-    if request.user.is_authenticated:
-        return JsonResponse({'response': True})
-    return JsonResponse({'response': False})
+    return controller.is_logged_in(request)
