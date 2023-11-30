@@ -71,8 +71,6 @@ pyodbc
 python-dateutil
 python-json-logger
 pytz
-pywin32
-pywinpty
 PyYAML
 pyzmq
 qtconsole
@@ -107,3 +105,4 @@ gunicorn
 django-cors-headers
 azure-storage-blob
 django-storages[azure]
+django
