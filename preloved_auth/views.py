@@ -5,9 +5,10 @@ import os
 from django.views.decorators.csrf import get_token
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
 
 from .models import ShopUser, ShopOwner, Location, ShopVerification
 from django.core.files.storage import default_storage as storage
@@ -56,7 +57,8 @@ class LoginController:
 controller = LoginController()
 
 def return_not_auth():
-    return JsonResponse({'error': 'user not authenticated'})
+    raise Exception("User not authenticated")
+    # return JsonResponse({'error': 'user not authenticated'})
 
 
 def generate_id(length=12):
@@ -108,21 +110,18 @@ class SignUpController:
         result = assert_post(request)
         if result:
             return result
-        if request.user.is_authenticated:
-            email = request.POST['email']
-            password = request.POST['password']
-            first_name = request.POST['first_name']
-            last_name = request.POST['last_name']
-            phone_no = request.POST['phone_no']
-            address_line = request.POST['address']
-            u = User.objects.create_user(email=email, username=email, password=password,
-                                         first_name=first_name, last_name=last_name)
-            l = Location.objects.create(address_plain=address_line)
-            s = ShopOwner.objects.create(userID=u, phoneNumber=phone_no, locationID=l.id)
-            ShopVerification.objects.create(shopOwnerID=s.id)
-            return JsonResponse({'response':'Ok!'})
-        else:
-            return return_not_auth()
+        email = request.POST['email']
+        password = request.POST['password']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        phone_no = request.POST['phone_no']
+        address_line = request.POST['address']
+        u = User.objects.create_user(email=email, username=email, password=password,
+                                     first_name=first_name, last_name=last_name)
+        l = Location.objects.create(address_plain=address_line)
+        s = ShopOwner.objects.create(userID=u, phoneNumber=phone_no, locationID=l)
+        ShopVerification.objects.create(shopOwnerID=s)
+        return JsonResponse({'response':'Ok!'})
 
 
 
@@ -131,10 +130,11 @@ class SignUpController:
         if result:
             return result
         if request.user.is_authenticated:
-            slugs = ShopVerification.objects.filter(shopOwnerID=request.user.id).first()
+            shop_owner = ShopOwner.objects.filter(userID=request.user).first()
+            slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
-            if file_path is not None:
+            if file_path is None:
                 return return_not_auth()
             slugs.idSlug1 = file_path
             slugs.save()
@@ -146,7 +146,8 @@ class SignUpController:
         if result:
             return result
         if request.user.is_authenticated:
-            slugs = ShopVerification.objects.filter(shopOwnerID=request.user.id).first()
+            shop_owner = ShopOwner.objects.filter(userID=request.user).first()
+            slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
             if file_path is not None:
@@ -161,7 +162,8 @@ class SignUpController:
         if result:
             return result
         if request.user.is_authenticated:
-            slugs = ShopVerification.objects.filter(shopOwnerID=request.user.id).first()
+            shop_owner = ShopOwner.objects.filter(userID=request.user).first()
+            slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
             if file_path is not None:
@@ -172,6 +174,80 @@ class SignUpController:
         return return_not_auth()
 
 
+class VerificationController:
+
+    def document_status (self, request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        id = request.POST['id']
+        response = {}
+        owner = ShopVerification.objects.filter(id=id).first()
+        if owner.idSlug1 is None or owner.idSlug2 is None or owner.selfieSlug is None:
+            response['status'] = 'incomplete'
+        else:
+            response['status'] = 'complete'
+        return JsonResponse(response)
+
+    def get_id_1(self, request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+
+        id = request.POST['id']
+        owner = ShopVerification.objects.filter(id=id).first()
+
+        # Assuming img is a binary image file
+        img = storage_worker.get_in_namespace(request, owner.idSlug1, namespace="verification/")
+
+        if img:
+            response = HttpResponse(img, content_type='image/png')  # Adjust content type based on the image format
+            response['Content-Disposition'] = f'inline; filename={owner.idSlug1}.png'  # Set a filename for the image
+            return response
+        else:
+            # Handle the case when the image is not found
+            return HttpResponse(status=404)
+
+    def get_id_2(self, request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+
+        id = request.POST['id']
+        owner = ShopVerification.objects.filter(id=id).first()
+
+        # Assuming img is a binary image file
+        img = storage_worker.get_in_namespace(request, owner.idSlug2, namespace="verification/")
+
+        if img:
+            response = HttpResponse(img, content_type='image/png')  # Adjust content type based on the image format
+            response[
+                'Content-Disposition'] = f'inline; filename={owner.idSlug1}.png'  # Set a filename for the image
+            return response
+        else:
+            # Handle the case when the image is not found
+            return HttpResponse(status=404)
+
+    def get_selfie(self, request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+
+        id = request.POST['id']
+        owner = ShopVerification.objects.filter(id=id).first()
+
+            # Assuming img is a binary image file
+        img = storage_worker.get_in_namespace(request, owner.selfieSlug, namespace="verification/")
+
+        if img:
+            response = HttpResponse(img,
+                                        content_type='image/png')  # Adjust content type based on the image format
+            response[
+                    'Content-Disposition'] = f'inline; filename={owner.idSlug1}.png'  # Set a filename for the image
+            return response
+        else:
+                # Handle the case when the image is not found
+            return HttpResponse(status=404)
+
+
+
+verificationController = VerificationController()
 signUpController = SignUpController()
 
 
@@ -210,3 +286,12 @@ def logout_attempt(request):
 
 def is_logged_in(request):
     return controller.is_logged_in(request)
+
+def get_id_1(request):
+    return verificationController.get_id_1(request)
+
+def get_id_2(request):
+    return verificationController.get_id_2(request)
+
+def get_selfie(request):
+    return verificationController.get_selfie(request)

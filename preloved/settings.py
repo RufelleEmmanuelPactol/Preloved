@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'store',
     'tickets'
 ]
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Assuming your frontend runs on this port
     "http://127.0.0.1:3000",  # Alternate localhost address

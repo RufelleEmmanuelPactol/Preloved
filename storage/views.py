@@ -19,7 +19,7 @@ class StorageWorker:
             slug = file.name
         if request.user.is_authenticated:
             file_path = f"users/{request.user.email}/usercontent/{namespace}{slug}{extension}"
-            default_storage.save(file_path)
+            default_storage.save(file_path, ContentFile(file.read()))
             return file_path
 
     def get_in_namespace(self, request, filename, namespace=""):
