@@ -199,8 +199,6 @@ class VerificationController:
 
         return JsonResponse(response)
 
-    from django.http import HttpResponse
-
     def get_image(self, request):
         if not request.user.is_authenticated:
             return return_not_auth()
