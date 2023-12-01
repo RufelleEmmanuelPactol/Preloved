@@ -2,6 +2,8 @@ from django.db import models
 from preloved_auth.models import Location, ShopOwner
 # Create your models here.
 
+
+
 class Store(models.Model):
     storeID = models.AutoField(primary_key=True)
     locationID = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='stores')
