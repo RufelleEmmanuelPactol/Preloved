@@ -28,6 +28,7 @@ def get_file_extension(file_object):
 
     return extension
 
+
 class LoginController:
 
     def loginAPI(self, request):
@@ -38,7 +39,7 @@ class LoginController:
         if u is not None:
             login(request, u)
             return JsonResponse({'status': 'OK!'})
-        return JsonResponse({'error': 'Invalid credentials', 'sessionID': request.session['sessionid']})
+        return JsonResponse({'error': 'Invalid credentials'})
 
     def logoutAPI(self, request):
         if request.user.is_authenticated:
@@ -52,9 +53,8 @@ class LoginController:
         return JsonResponse({'response': False})
 
 
-
-
 controller = LoginController()
+
 
 def return_not_auth():
     raise Exception("User not authenticated")
@@ -121,9 +121,7 @@ class SignUpController:
         l = Location.objects.create(address_plain=address_line)
         s = ShopOwner.objects.create(userID=u, phoneNumber=phone_no, locationID=l)
         ShopVerification.objects.create(shopOwnerID=s)
-        return JsonResponse({'response':'Ok!'})
-
-
+        return JsonResponse({'response': 'Ok!'})
 
     def shop_id_one(self, request):
         result = assert_post(request)
@@ -138,7 +136,7 @@ class SignUpController:
                 return return_not_auth()
             slugs.idSlug1 = file_path
             slugs.save()
-            return JsonResponse({'response':'Ok!'})
+            return JsonResponse({'response': 'Ok!'})
         return return_not_auth()
 
     def shop_id_two(self, request):
@@ -154,7 +152,7 @@ class SignUpController:
                 return return_not_auth()
             slugs.idSlug2 = file_path
             slugs.save()
-            return JsonResponse({'response':'Ok!'})
+            return JsonResponse({'response': 'Ok!'})
         return return_not_auth()
 
     def shop_id_selfie(self, request):
@@ -170,81 +168,76 @@ class SignUpController:
                 return return_not_auth()
             slugs.selfieSlug = file_path
             slugs.save()
-            return JsonResponse({'response':'Ok!'})
+            return JsonResponse({'response': 'Ok!'})
         return return_not_auth()
 
 
 class VerificationController:
 
-    def document_status (self, request):
+    def document_status(self, request):
         if not request.user.is_authenticated:
             return return_not_auth()
-        id = request.POST['id']
+
+            # Retrieve the 'id' from the GET request parameters
+        id = request.GET.get('id')
+
         response = {}
-        owner = ShopVerification.objects.filter(id=id).first()
-        if owner.idSlug1 is None or owner.idSlug2 is None or owner.selfieSlug is None:
+        owner = ShopVerification.objects.filter(shopOwnerID=id).first()
+
+        if not owner:
+            response['status'] = 'not found'
+        elif owner.idSlug1 is None or owner.idSlug2 is None or owner.selfieSlug is None:
             response['status'] = 'incomplete'
+        elif owner.idSlug1 is None:
+            response['status'] = 'id 1 is missing'
+        elif owner.idSlug2 is None:
+            response['status'] = 'id 2 is missing'
+        elif owner.selfieSlug is None:
+            response['status'] = 'selfie is missing'
         else:
             response['status'] = 'complete'
+
         return JsonResponse(response)
 
-    def get_id_1(self, request):
+    from django.http import HttpResponse
+
+    def get_image(self, request):
         if not request.user.is_authenticated:
             return return_not_auth()
 
-        id = request.POST['id']
-        owner = ShopVerification.objects.filter(id=id).first()
+        # Get parameters from GET request
+        id = request.GET.get('id')
+        resource_type = request.GET.get('resource_type')
+
+        if id is None or resource_type is None:
+            raise Exception(f"Cannot find missing resource type and id where id is {id} and resource type {resource_type}")
+
+        # Retrieve the owner object based on the id
+        owner = ShopVerification.objects.filter(shopOwnerID=id).first()
+
+        if not owner:
+            raise Exception("Owner of image not found")
+
+        # Determine the image slug based on the resource_type
+        if resource_type == "id1":
+            image_slug = owner.idSlug1
+        elif resource_type == "id2":
+            image_slug = owner.idSlug2
+        elif resource_type == "selfie":
+            image_slug = owner.selfieSlug
+        else:
+            raise Exception("Cannot find resource type")
 
         # Assuming img is a binary image file
-        img = storage_worker.get_in_namespace(request, owner.idSlug1, namespace="verification/")
+        img = storage_worker.get_absolute(request, image_slug)
 
         if img:
             response = HttpResponse(img, content_type='image/png')  # Adjust content type based on the image format
-            response['Content-Disposition'] = f'inline; filename={owner.idSlug1}.png'  # Set a filename for the image
+            response['Content-Disposition'] = f'inline; filename={image_slug}.png'  # Set a filename for the image
             return response
         else:
             # Handle the case when the image is not found
-            return HttpResponse(status=404)
-
-    def get_id_2(self, request):
-        if not request.user.is_authenticated:
-            return return_not_auth()
-
-        id = request.POST['id']
-        owner = ShopVerification.objects.filter(id=id).first()
-
-        # Assuming img is a binary image file
-        img = storage_worker.get_in_namespace(request, owner.idSlug2, namespace="verification/")
-
-        if img:
-            response = HttpResponse(img, content_type='image/png')  # Adjust content type based on the image format
-            response[
-                'Content-Disposition'] = f'inline; filename={owner.idSlug1}.png'  # Set a filename for the image
-            return response
-        else:
-            # Handle the case when the image is not found
-            return HttpResponse(status=404)
-
-    def get_selfie(self, request):
-        if not request.user.is_authenticated:
-            return return_not_auth()
-
-        id = request.POST['id']
-        owner = ShopVerification.objects.filter(id=id).first()
-
-            # Assuming img is a binary image file
-        img = storage_worker.get_in_namespace(request, owner.selfieSlug, namespace="verification/")
-
-        if img:
-            response = HttpResponse(img,
-                                        content_type='image/png')  # Adjust content type based on the image format
-            response[
-                    'Content-Disposition'] = f'inline; filename={owner.idSlug1}.png'  # Set a filename for the image
-            return response
-        else:
-                # Handle the case when the image is not found
-            return HttpResponse(status=404)
-
+            raise Exception("Cannot find image")
 
 
 verificationController = VerificationController()
@@ -254,8 +247,10 @@ signUpController = SignUpController()
 def shop_id_one(request):
     return signUpController.shop_id_one(request)
 
+
 def shop_id_two(request):
     return signUpController.shop_id_two(request)
+
 
 def shop_id_selfie(request):
     return signUpController.shop_id_selfie(request)
@@ -263,6 +258,7 @@ def shop_id_selfie(request):
 
 def new_shop_user(request):
     return signUpController.new_shop_user(request)
+
 
 def new_shop_owner(request):
     return signUpController.new_shop_owner(request)
@@ -287,11 +283,9 @@ def logout_attempt(request):
 def is_logged_in(request):
     return controller.is_logged_in(request)
 
-def get_id_1(request):
-    return verificationController.get_id_1(request)
 
-def get_id_2(request):
-    return verificationController.get_id_2(request)
+def get_image(request):
+    return verificationController.get_image(request)
 
-def get_selfie(request):
-    return verificationController.get_selfie(request)
+def document_status(request):
+    return verificationController.document_status(request)

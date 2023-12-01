@@ -23,8 +23,13 @@ class StorageWorker:
             return file_path
 
     def get_in_namespace(self, request, filename, namespace=""):
+        path = f"users/{request.user.email}/usercontent/{namespace}{filename}"
         if request.user.is_authenticated:
-            return default_storage.open(f"users/{request.user.email}/usercontent/{namespace}{filename}")
+            return default_storage.open(path)
+
+    def get_absolute(self, request, path):
+        if request.user.is_authenticated:
+            return default_storage.open(path)
 
 
 class Storage(View):
