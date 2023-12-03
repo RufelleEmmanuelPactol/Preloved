@@ -6,11 +6,8 @@ from django.views.decorators.csrf import get_token
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
-from django.views.decorators.http import require_POST
-from django.shortcuts import get_object_or_404
 
-from .models import ShopUser, ShopOwner, Location, ShopVerification
+from .models import ShopUser, ShopOwner, Location, ShopVerification, Staff
 from django.core.files.storage import default_storage as storage
 from django.core.files.base import ContentFile
 from datetime import datetime
@@ -39,13 +36,13 @@ class LoginController:
         if u is not None:
             login(request, u)
             return JsonResponse({'status': 'OK!'})
-        return JsonResponse({'error': 'Invalid credentials'})
+        return JsonResponse({'error': 'Invalid credentials'}, status=400)
 
     def logoutAPI(self, request):
         if request.user.is_authenticated:
             logout(request)
             return JsonResponse({'status': 'OK!'})
-        return JsonResponse({'error': 'user not authenticated'})
+        return JsonResponse({'error': 'user not authenticated'}, status=400)
 
     def is_logged_in(self, request):
         if request.user.is_authenticated:
@@ -55,10 +52,12 @@ class LoginController:
 
 controller = LoginController()
 
+def return_not_post():
+    return JsonResponse({'error': 'not a post-type request'}, status=400)
 
 def return_not_auth():
-    raise Exception("User not authenticated")
-    # return JsonResponse({'error': 'user not authenticated'})
+    # raise Exception("User not authenticated")
+    return JsonResponse({'error': 'user not authenticated'}, status=400)
 
 
 def generate_id(length=12):
@@ -69,7 +68,7 @@ def generate_id(length=12):
 
 def assert_post(request):
     if request.method != 'POST':
-        return JsonResponse({'error': 'not a post-type request'})
+        return JsonResponse({'error': 'not a post-type request'}, status=400)
 
 
 class SignUpController:
@@ -96,7 +95,7 @@ class SignUpController:
             ShopUser.objects.create(userID=u, phone_no=phone_no, locationID=locationID, is_feminine=isFeminine)
 
         except KeyError as key_error:
-            return JsonResponse({'error': f'Missing required parameter: {key_error}'})
+            return JsonResponse({'error': f'Missing required parameter: {key_error}'}, status=400)
 
         except Exception as ex:
             msg = f'Error: {str(ex)}'
@@ -176,7 +175,8 @@ class VerificationController:
 
     def document_status(self, request):
         if not request.user.is_authenticated:
-            return return_not_auth()
+            if Staff.objects.filter(uID=request.user.id) is None:
+                return return_not_auth()
 
             # Retrieve the 'id' from the GET request parameters
         id = request.GET.get('id')
@@ -201,14 +201,16 @@ class VerificationController:
 
     def get_image(self, request):
         if not request.user.is_authenticated:
-            return return_not_auth()
+            if Staff.objects.filter(uID=request.user.id) is None:
+                return return_not_auth()
 
         # Get parameters from GET request
         id = request.GET.get('id')
         resource_type = request.GET.get('resource_type')
 
         if id is None or resource_type is None:
-            raise Exception(f"Cannot find missing resource type and id where id is {id} and resource type {resource_type}")
+            raise Exception(
+                f"Cannot find missing resource type and id where id is {id} and resource type {resource_type}")
 
         # Retrieve the owner object based on the id
         owner = ShopVerification.objects.filter(shopOwnerID=id).first()
@@ -237,9 +239,60 @@ class VerificationController:
             # Handle the case when the image is not found
             raise Exception("Cannot find image")
 
+    def get_shop_owner_details(self, request):
+        if not request.user.is_authenticated:
+            if Staff.objects.filter(uID=request.user.id) is None:
+                return return_not_auth()
+        id = request.GET.get('id')
+        user = None
+        shop_owner = None
+        try:
+            shop_owner = ShopOwner.objects.filter(id=id).first()
+            user = User.objects.filter(id=shop_owner.userID_id).first()
+        except Exception as e:
+            return JsonResponse({'error': 'Cannot find queried user.'}, status=400)
+        shop_details = {}
+        shop_details['isVerified'] = shop_owner.isVerified
+        shop_details['email'] = user.email
+        shop_details['first_name'] = user.first_name
+        shop_details['last_name'] = user.last_name
+        return JsonResponse(shop_details)
+
+    def get_list_pending(self, request):
+        if not request.user.is_authenticated:
+            if Staff.objects.filter(uID=request.user.id) is None:
+                return return_not_auth()
+        to_verify = []
+        for user in ShopVerification.objects.filter(status=0):
+            to_verify.append(user.id)
+        return JsonResponse({'unverified': to_verify})
+
+    def approve_or_reject(self, request):
+        if request.method != 'POST':
+            return return_not_post()
+        if not request.user.is_authenticated:
+            if Staff.objects.filter(uID=request.user.id) is None:
+                return return_not_auth()
+        id = request.POST['id']
+        status = int(request.POST['updated_status'])
+        try:
+            obj = ShopVerification.objects.filter(shopOwnerID=id).first()
+            obj.status = status
+            obj.save()
+            return JsonResponse({'response': 'Ok!'})
+        except Exception as e:
+            return JsonResponse({'error': 'Invalid Shop Owner ID.'}, status=400)
+
 
 verificationController = VerificationController()
 signUpController = SignUpController()
+
+
+## DOCUMENTATION STARTS HERE
+## Following format:
+## Endpoint Name
+## Endpoint URL
+## Endpoint METHOD (post, get)
 
 
 def shop_id_one(request):
@@ -285,5 +338,18 @@ def is_logged_in(request):
 def get_image(request):
     return verificationController.get_image(request)
 
+
 def document_status(request):
     return verificationController.document_status(request)
+
+
+def get_shop_owner_details(request):
+    return verificationController.get_shop_owner_details(request)
+
+
+def get_list_pending(request):
+    return verificationController.get_list_pending(request)
+
+
+def approve_or_reject(request):
+    return verificationController.approve_or_reject(request)
