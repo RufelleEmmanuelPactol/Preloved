@@ -17,6 +17,7 @@ class Item(models.Model):
     itemID = models.AutoField(primary_key=True)
     storeID = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='items')
     name = models.CharField(max_length=255)
+    description = models.TextField()
     isFeminine = models.BooleanField(default=True)
 
     def __str__(self):
