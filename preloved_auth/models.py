@@ -32,9 +32,6 @@ class ShopVerification(models.Model):
     selfieSlug = models.CharField(max_length=256)
     status = models.IntegerField(default=0)
 
-    class Meta:
-        unique_together = ('idSlug1', 'idSlug2', 'selfieSlug')
-
 
 
 class Store(models.Model):

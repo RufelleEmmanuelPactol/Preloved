@@ -1,8 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Item, Store
-from preloved_auth import ShopOwner
-
+from .models import Item, Store, Tag
+from preloved_auth.models import ShopOwner, Location
 
 
 # Create your views here.
@@ -16,12 +15,11 @@ def return_not_auth():
     return JsonResponse({'error': 'user not authenticated'}, status=400)
 
 
-
 class ShopController:
-
 
     def get_store_owner(self, request):
         try:
+
             return ShopOwner.objects.filter(userID=request.user).first()
         except Exception as e:
             return None
@@ -29,14 +27,20 @@ class ShopController:
     def get_store(self, request):
         try:
             owner = self.get_store_owner(request)
+
             return Store.objects.filter(shopOwnerID=owner).first()
         except Exception as e:
             return None
 
+    def new_store(self, request):
+        if not request.user.is_authenticated:
+            if not request.user.is_staff:
+                return return_not_auth()
 
     def get_all_items(self, request):
         if not request.user.is_authenticated:
-            return return_not_auth()
+            if not request.user.is_staff:
+                return return_not_auth()
         try:
             id = int(request.GET.get('id'))
             sets = Item.objects.filter(storeID=Store.objects.filter(storeid=id).first())
@@ -47,21 +51,58 @@ class ShopController:
         except Exception as e:
             return return_id_not_found()
 
-
     def add_item(self, request):
         if not request.user.is_authenticated:
             if not request.user.is_staff:
                 return return_not_auth()
         POST = request.POST
         store = self.get_store(request)
-        description = POST['description']
-        style = int(POST['isFeminine'])
-        name = POST['name']
+        description = POST.get('description')
+        style = int(POST.get('isFeminine'))
+        name = POST.get('name')
+        tagID = int(POST.get('tagID'))
+        if store is None:
+            return JsonResponse({'error' : 'Shop has no store'}, status=400)
         item = Item(storeID=store, description=description, isFeminine=style, name=name)
         item.save()
         return JsonResponse({'response': 'Ok!', 'generatedID': item.itemID})
+
+    def get_all_tags(self, request):
+        tags = {}
+        for x in Tag.objects.all():
+            tags[x.name] = x.tagID
+        return JsonResponse(tags)
+
+
+    def create_new_shop(self, request):
+        if not request.user.is_authenticated:
+            if not request.user.is_staff:
+                return return_not_auth()
+        address = request.POST.get('address')
+        location = Location(address_plain=address)
+        location.save()
+        name = request.POST.get('name')
+        owner = self.get_store_owner(request)
+        if owner is None:
+            return JsonResponse({'error' : 'User is not a shop owner'}, status=400)
+        store = Store(shopOwnerID=owner, locationID=location, storeName=name)
+        store.save()
+        return JsonResponse({'response' : 'Ok!', 'storeID': store.storeID})
 
 
 
 
 shopController = ShopController()
+
+
+def add_item(request):
+    return shopController.add_item(request)
+
+
+def get_all_tags(request):
+    return shopController.get_all_tags(request)
+
+
+def create_new_shop(request):
+    return shopController.create_new_shop(request)
+

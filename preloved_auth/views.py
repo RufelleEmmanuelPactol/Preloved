@@ -83,12 +83,7 @@ class SignUpController:
             first_name = request.POST['first_name']
             last_name = request.POST['last_name']
             phone_no = request.POST['phone_no']
-            isFeminine = request.POST['isFeminine']
-            print('Now loading feminine')
-            if isFeminine == "Feminine":
-                isFeminine = 1
-            else:
-                isFeminine = 0
+            isFeminine = int(request.POST['isFeminine'])
             locationID = None
             u = User.objects.create_user(username=email, email=email, password=password, first_name=first_name,
                                          last_name=last_name, is_staff=1)
@@ -119,7 +114,7 @@ class SignUpController:
                                      first_name=first_name, last_name=last_name)
         l = Location.objects.create(address_plain=address_line)
         s = ShopOwner.objects.create(userID=u, phoneNumber=phone_no, locationID=l)
-        ShopVerification.objects.create(shopOwnerID=s)
+        ShopVerification(shopOwnerID=s).save()
         return JsonResponse({'response': 'Ok!'})
 
     def shop_id_one(self, request):
@@ -284,6 +279,26 @@ class VerificationController:
             return JsonResponse({'error': 'Invalid Shop Owner ID.'}, status=400)
 
 
+    def get_current_user(self, request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+
+        value = {}
+        value['id'] = request.user.id
+        value['first name'] = request.user.first_name
+        value['last name'] = request.user.last_name
+        value['email'] = request.user.email
+        s = ShopUser.objects.filter(userID=request.user)
+        if s is not None:
+            value['user_type'] = 'Shop User'
+            value['user_type_int'] = 0
+        else:
+            value['user_type'] = 'Shop Owner'
+            value['user_type_int'] = 1
+
+        return JsonResponse(value)
+
+
 verificationController = VerificationController()
 signUpController = SignUpController()
 
@@ -353,3 +368,8 @@ def get_list_pending(request):
 
 def approve_or_reject(request):
     return verificationController.approve_or_reject(request)
+
+
+
+def get_current_user(request):
+    return verificationController.get_current_user(request)
