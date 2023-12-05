@@ -42,7 +42,7 @@ class Store(models.Model):
 
 
 class Staff(models.Model):
-    uID = models.ForeignKey(User, on_delete=models.CASCADE)
+    uID = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
 
 
 

@@ -1,7 +1,20 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Item, Store, Tag
+from .models import Item, Store, Tag, Slug
 from preloved_auth.models import ShopOwner, Location
+from storage.views import StorageWorker
+
+storage_worker = StorageWorker()
+
+def return_not_post():
+    return JsonResponse({'error': 'not a post-type request'}, status=400)
+
+
+def thumbnailify(id):
+    set = Slug.objects.filter(itemID=id, isThumbnail=1)
+    if set is None:
+        return 1
+    return 0
 
 
 # Create your views here.
@@ -19,7 +32,6 @@ class ShopController:
 
     def get_store_owner(self, request):
         try:
-
             return ShopOwner.objects.filter(userID=request.user).first()
         except Exception as e:
             return None
@@ -36,6 +48,7 @@ class ShopController:
         if not request.user.is_authenticated:
             if not request.user.is_staff:
                 return return_not_auth()
+        ## IMPLEMENT!
 
     def get_all_items(self, request):
         if not request.user.is_authenticated:
@@ -55,6 +68,8 @@ class ShopController:
         if not request.user.is_authenticated:
             if not request.user.is_staff:
                 return return_not_auth()
+        if request.method != 'POST':
+            return return_not_post()
         POST = request.POST
         store = self.get_store(request)
         description = POST.get('description')
@@ -62,7 +77,7 @@ class ShopController:
         name = POST.get('name')
         tagID = int(POST.get('tagID'))
         if store is None:
-            return JsonResponse({'error' : 'Shop has no store'}, status=400)
+            return JsonResponse({'error': 'Shop has no store'}, status=400)
         item = Item(storeID=store, description=description, isFeminine=style, name=name)
         item.save()
         return JsonResponse({'response': 'Ok!', 'generatedID': item.itemID})
@@ -73,22 +88,32 @@ class ShopController:
             tags[x.name] = x.tagID
         return JsonResponse(tags)
 
-
     def create_new_shop(self, request):
         if not request.user.is_authenticated:
             if not request.user.is_staff:
                 return return_not_auth()
+        if request.method != 'POST':
+            return return_not_post()
         address = request.POST.get('address')
         location = Location(address_plain=address)
         location.save()
         name = request.POST.get('name')
         owner = self.get_store_owner(request)
         if owner is None:
-            return JsonResponse({'error' : 'User is not a shop owner'}, status=400)
+            return JsonResponse({'error': 'User is not a shop owner'}, status=400)
         store = Store(shopOwnerID=owner, locationID=location, storeName=name)
         store.save()
-        return JsonResponse({'response' : 'Ok!', 'storeID': store.storeID})
+        return JsonResponse({'response': 'Ok!', 'storeID': store.storeID})
 
+    @staticmethod
+    def attach_image_to_item(request):
+        if request.method != 'POST':
+            return return_not_post()
+        imgStream = request.FILES.get('img')
+        imgID = int(request.POST.get('id'))
+        slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/', slug=imgStream.name)
+        slug = Slug(slug=slugString, itemID=imgID, isThumbnail=thumbnailify(imgID))
+        slug.save()
 
 
 
@@ -105,4 +130,5 @@ def get_all_tags(request):
 
 def create_new_shop(request):
     return shopController.create_new_shop(request)
+
 

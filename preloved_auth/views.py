@@ -126,6 +126,7 @@ class SignUpController:
             slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
+
             if file_path is None:
                 return return_not_auth()
             slugs.idSlug1 = file_path
@@ -288,13 +289,20 @@ class VerificationController:
         value['first name'] = request.user.first_name
         value['last name'] = request.user.last_name
         value['email'] = request.user.email
-        s = ShopUser.objects.filter(userID=request.user)
-        if s is not None:
+        s = ShopOwner.objects.filter(userID=request.user).first()
+        if s is None:
             value['user_type'] = 'Shop User'
             value['user_type_int'] = 0
         else:
-            value['user_type'] = 'Shop Owner'
-            value['user_type_int'] = 1
+            staff = Staff.objects.filter(uID=request.user).first()
+            if staff is not None:
+                value['user_type'] = 'Verification Officer'
+                value['user_type_int'] = 2
+            else:
+                value['user_type'] = 'Shop Owner'
+                value['user_type_int'] = 1
+
+
 
         return JsonResponse(value)
 
