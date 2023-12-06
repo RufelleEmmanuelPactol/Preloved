@@ -282,7 +282,7 @@ class VerificationController:
         to_verify = []
         for user in ShopVerification.objects.filter(status=0):
             to_verify.append(user.id)
-        return JsonResponse(to_verify)
+        return JsonResponse({'pending' : to_verify})
 
     def approve_or_reject(self, request):
         if request.method != 'POST':
