@@ -35,7 +35,24 @@ class LoginController:
         u = authenticate(username=request.POST['email'], password=request.POST['password'])
         if u is not None:
             login(request, u)
-            return JsonResponse({'status': 'OK!'})
+            value = {}
+            value['id'] = request.user.id
+            value['first name'] = request.user.first_name
+            value['last name'] = request.user.last_name
+            value['email'] = request.user.email
+            s = ShopOwner.objects.filter(userID=request.user).first()
+            if s is None:
+                value['user_type'] = 'Shop User'
+                value['user_type_int'] = 0
+            else:
+                staff = Staff.objects.filter(uID=request.user).first()
+                if staff is not None:
+                    value['user_type'] = 'Verification Officer'
+                    value['user_type_int'] = 2
+                else:
+                    value['user_type'] = 'Shop Owner'
+                    value['user_type_int'] = 1
+            return JsonResponse(value)
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
 
     def logoutAPI(self, request):
@@ -56,7 +73,6 @@ def return_not_post():
     return JsonResponse({'error': 'not a post-type request'}, status=400)
 
 def return_not_auth():
-    # raise Exception("User not authenticated")
     return JsonResponse({'error': 'user not authenticated'}, status=400)
 
 
@@ -281,30 +297,34 @@ class VerificationController:
 
 
     def get_current_user(self, request):
-        if not request.user.is_authenticated:
-            return return_not_auth()
+        try:
+            if not request.user.is_authenticated:
+                return return_not_auth()
 
-        value = {}
-        value['id'] = request.user.id
-        value['first name'] = request.user.first_name
-        value['last name'] = request.user.last_name
-        value['email'] = request.user.email
-        s = ShopOwner.objects.filter(userID=request.user).first()
-        if s is None:
-            value['user_type'] = 'Shop User'
-            value['user_type_int'] = 0
-        else:
-            staff = Staff.objects.filter(uID=request.user).first()
-            if staff is not None:
-                value['user_type'] = 'Verification Officer'
-                value['user_type_int'] = 2
+            value = {}
+            value['id'] = request.user.id
+            value['first name'] = request.user.first_name
+            value['last name'] = request.user.last_name
+            value['email'] = request.user.email
+            s = ShopOwner.objects.filter(userID=request.user).first()
+            if s is None:
+                value['user_type'] = 'Shop User'
+                value['user_type_int'] = 0
             else:
-                value['user_type'] = 'Shop Owner'
-                value['user_type_int'] = 1
+                staff = Staff.objects.filter(uID=request.user).first()
+                if staff is not None:
+                    value['user_type'] = 'Verification Officer'
+                    value['user_type_int'] = 2
+                else:
+                    value['user_type'] = 'Shop Owner'
+                    value['user_type_int'] = 1
 
 
 
-        return JsonResponse(value)
+            return JsonResponse(value)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
 
 
 verificationController = VerificationController()

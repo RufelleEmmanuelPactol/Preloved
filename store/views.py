@@ -30,12 +30,14 @@ def return_not_auth():
 
 class ShopController:
 
+    @staticmethod
     def get_store_owner(self, request):
         try:
             return ShopOwner.objects.filter(userID=request.user).first()
         except Exception as e:
             return None
 
+    @staticmethod
     def get_store(self, request):
         try:
             owner = self.get_store_owner(request)
@@ -109,11 +111,40 @@ class ShopController:
     def attach_image_to_item(request):
         if request.method != 'POST':
             return return_not_post()
+
+
         imgStream = request.FILES.get('img')
         imgID = int(request.POST.get('id'))
+        item = Item.objects.filter(itemID=imgID).first()
+        if item is None:
+            return return_id_not_found()
+        bld = ""
+        for i in imgStream.name:
+            if i is not " ":
+                bld += i
+        imgStream.name = bld
         slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/', slug=imgStream.name)
-        slug = Slug(slug=slugString, itemID=imgID, isThumbnail=thumbnailify(imgID))
+        slug = Slug(slug=slugString, itemID=item, isThumbnail=thumbnailify(imgID))
         slug.save()
+
+        return JsonResponse({'response' : 'Ok!', 'slug' : slugString})
+
+    @staticmethod
+    def get_item_details(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+
+        response = {}
+        id = int(request.GET.get('id'))
+        retrieved = Item.objects.filter(itemID=id).first()
+        if retrieved is None:
+            return return_id_not_found()
+        response['itemID'] = retrieved.itemID
+        response['storeID'] = retrieved.storeID.storeID
+        response['name'] = retrieved.name
+        response['description'] = retrieved.description
+        response['isFeminine'] = bool(retrieved.isFeminine)
+        return JsonResponse(response)
 
 
 

@@ -51,26 +51,23 @@ class Storage(View):
     # Returns a resource given their username
 
     def get(self, request):
-
-
         if request.user.is_authenticated:
-
-            email = request.user.email
             path = request.GET.get('path')
-
 
             if path is None:
                 return JsonResponse({'error': 'cannot find file'})
             try:
-                file = default_storage.open(f"users/{email}/usercontent/{path}")
-                response = HttpResponse(file.read(), content_type='application/octet-stream')
+                file = default_storage.open(path)
+                response = HttpResponse(file.read(), content_type='image/*')  # Set content type for image
                 filename = os.path.basename(file.name)
-                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+                # Set Content-Disposition to display the image in the browser
+                response['Content-Disposition'] = 'inline; filename="' + filename + '"'
+
                 file.close()
                 return response
             except Exception as e:
-                return JsonResponse({'error': str(e), 'path': f"users/{email}/usercontent/{path}"})
-
+                return JsonResponse({'error': str(e), 'path': path})
         else:
             return JsonResponse({'error': 'cannot find file'})
 
