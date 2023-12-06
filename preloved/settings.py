@@ -19,8 +19,7 @@ from corsheaders.middleware import CorsMiddleware
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-CSRF_COOKIE_SAMESITE = None
-SESSION_COOKIE_SAMESITE = None
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -29,6 +28,7 @@ SECRET_KEY = 'django-insecure-pg94nfddwar7knk3$_ot=rvcfd4evtpt!9#3#+5w0ahv06s3u*
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
 
 ALLOWED_HOSTS = ['*']
 
@@ -99,6 +99,9 @@ MIDDLEWARE = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+CSRF_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = None
+DCS_SESSION_COOKIE_SAMESITE = 'None'
 
 
 ROOT_URLCONF = 'preloved.urls'
