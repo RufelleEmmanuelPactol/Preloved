@@ -52,6 +52,7 @@ class LoginController:
                 else:
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
+            value['sessionID'] =  request.COOKIES.get('sessionid')
             return JsonResponse(value)
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
 
@@ -63,8 +64,8 @@ class LoginController:
 
     def is_logged_in(self, request):
         if request.user.is_authenticated:
-            return JsonResponse({'response': True})
-        return JsonResponse({'response': False})
+            return JsonResponse({'response': True, 'sessionid' : request.COOKIES.get('sessionid')}, )
+        return JsonResponse({'response': False, 'sessionid' : request.COOKIES.get('sessionid')})
 
 
 controller = LoginController()
