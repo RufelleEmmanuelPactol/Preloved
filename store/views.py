@@ -120,7 +120,7 @@ class ShopController:
             return return_id_not_found()
         bld = ""
         for i in imgStream.name:
-            if i is not " ":
+            if i != " ":
                 bld += i
         imgStream.name = bld
         slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/', slug=imgStream.name)
@@ -149,6 +149,7 @@ class ShopController:
 
     @staticmethod
     def get_balance(request):
+        pass
 
 
 shopController = ShopController()
