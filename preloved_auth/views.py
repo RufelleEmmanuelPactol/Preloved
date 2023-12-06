@@ -41,7 +41,10 @@ class LoginController:
             value['last name'] = request.user.last_name
             value['email'] = request.user.email
             s = ShopOwner.objects.filter(userID=request.user).first()
-            if s is None:
+            if request.user.is_superuser:
+                value['user_type'] = 'Admin'
+                value['user_type_int'] = 3
+            elif s is None:
                 value['user_type'] = 'Shop User'
                 value['user_type_int'] = 0
             else:
@@ -309,7 +312,10 @@ class VerificationController:
             value['last name'] = request.user.last_name
             value['email'] = request.user.email
             s = ShopOwner.objects.filter(userID=request.user).first()
-            if s is None:
+            if request.user.is_superuser:
+                value['user_type'] = 'Admin'
+                value['user_type_int'] = 3
+            elif s is None:
                 value['user_type'] = 'Shop User'
                 value['user_type_int'] = 0
             else:

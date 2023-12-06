@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Item, Store, Tag, Slug
+from .models import Item, Store, Tag, Slug, ItemTag
 from preloved_auth.models import ShopOwner, Location
 from storage.views import StorageWorker
 
@@ -78,10 +78,18 @@ class ShopController:
         style = int(POST.get('isFeminine'))
         name = POST.get('name')
         tagID = int(POST.get('tagID'))
+        price = float(POST.get('price'))
+
+        t = Tag.objects.filter(id=tagID)
+
+
+
+
         if store is None:
             return JsonResponse({'error': 'Shop has no store'}, status=400)
-        item = Item(storeID=store, description=description, isFeminine=style, name=name)
+        item = Item(storeID=store, description=description, isFeminine=style, name=name, price=price)
         item.save()
+        ItemTag(tag=t, item=item).save()
         return JsonResponse({'response': 'Ok!', 'generatedID': item.itemID})
 
     def get_all_tags(self, request):
@@ -161,7 +169,7 @@ class ShopController:
     def add_balance(request):
         if not request.user.is_authenticated:
             return return_not_auth()
-        if not request.user.is_staff:
+        if not request.user.is_superuser:
             return return_not_auth()
         id = int(request.POST['id'])
         owner = ShopOwner.objects.filter(id=id).first()
