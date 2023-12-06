@@ -55,7 +55,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",  # Assuming your frontend runs on a different server
     "http://127.0.0.1:8000",
     "http://127.0.0.1:5500", # Alternate localhost address
-    'https://prelovedbackends.azurewebsites.net'
+    'https://prelovedbackends.azurewebsites.net',
+    'http://localhost:5173/',
+    "http://127.0.0.1:5173",
+
 
 ]
 

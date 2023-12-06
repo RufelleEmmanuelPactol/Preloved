@@ -31,14 +31,14 @@ def return_not_auth():
 class ShopController:
 
     @staticmethod
-    def get_store_owner(self, request):
+    def get_store_owner(request):
         try:
             return ShopOwner.objects.filter(userID=request.user).first()
         except Exception as e:
             return None
 
     @staticmethod
-    def get_store(self, request):
+    def get_store(request):
         try:
             owner = self.get_store_owner(request)
 
