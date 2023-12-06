@@ -149,7 +149,29 @@ class ShopController:
 
     @staticmethod
     def get_balance(request):
-        pass
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        ownerID = request.GET.get('id')
+        s = ShopOwner.objects.filter(id=ownerID).first()
+        if s is None:
+            return_id_not_found()
+        return JsonResponse({'balance': s.balance})
+
+    @staticmethod
+    def add_balance(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        if not request.user.is_staff:
+            return return_not_auth()
+        id = int(request.POST['id'])
+        owner = ShopOwner.objects.filter(id=id).first()
+        if owner is None:
+            return return_id_not_found()
+        owner.balance = float(request.POST['increase'])
+        owner.save()
+        return JsonResponse({'response' : 'OK!', 'balance': owner.balance})
+
+
 
 
 shopController = ShopController()
