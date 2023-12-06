@@ -77,10 +77,11 @@ def return_not_auth():
     return JsonResponse({'error': 'user not authenticated'}, status=400)
 
 
-def generate_id(length=12):
+def generate_id(request):
+    length = 12
     characters = string.ascii_letters + string.digits
     random_string = ''.join(secrets.choice(characters) for _ in range(length))
-    return random_string
+    return JsonResponse({'response' : random_string})
 
 
 def assert_post(request):

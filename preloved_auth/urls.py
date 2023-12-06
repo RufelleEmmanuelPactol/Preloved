@@ -2,8 +2,9 @@ from django.contrib import admin
 
 from django.urls import path, include
 from .views import new_shop_user, csrf_token, loginAPI, logout_attempt, is_logged_in, shop_id_selfie, shop_id_two, shop_id_one, new_shop_owner, get_image, document_status, get_shop_owner_details, get_list_pending
-from .views import approve_or_reject, get_current_user
+from .views import approve_or_reject, get_current_user, generate_id
 urlpatterns = [
+    path('generate_id', generate_id),
     path('new_shop_user', new_shop_user),
     path('csrf_token', csrf_token),
     path('login', loginAPI),
