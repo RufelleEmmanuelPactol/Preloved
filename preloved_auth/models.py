@@ -21,6 +21,7 @@ class ShopOwner(models.Model):
     phoneNumber = models.CharField(max_length=20)
     locationID = models.ForeignKey(Location, on_delete=models.CASCADE)
     isVerified = models.IntegerField(default=0)
+    balance = models.DecimalField(default=0, decimal_places=2, max_digits=20)
 
 
 

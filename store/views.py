@@ -147,6 +147,9 @@ class ShopController:
         return JsonResponse(response)
 
 
+    @staticmethod
+    def get_balance(request):
+
 
 shopController = ShopController()
 
