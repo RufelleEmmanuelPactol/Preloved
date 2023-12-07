@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from . import preloved_secrets as secrets
+# Other imports...
+from corsheaders.middleware import CorsMiddleware
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +29,8 @@ SECRET_KEY = 'django-insecure-pg94nfddwar7knk3$_ot=rvcfd4evtpt!9#3#+5w0ahv06s3u*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,20 +43,68 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'storage',
-    'preloved_auth'
+    'preloved_auth',
+    'corsheaders',
+    'store',
+    'tickets'
 ]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_EXPOSE_HEADERS = ["Set-Cookie"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Assuming your frontend runs on this port
+    "http://127.0.0.1:3000",  # Alternate localhost address
+    "http://localhost:8000",  # Assuming your frontend runs on a different server
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:5500", # Alternate localhost address
+    'https://prelovedbackends.azurewebsites.net',
+    'http://localhost:5173',
+    "http://127.0.0.1:5173",
+]
+
+
+# settings.py
+# settings.py
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',  # Set to DEBUG for more detailed logging
+    },
+}
+
+
+
+DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+AZURE_ACCOUNT_NAME = secrets.AZURE_ACCOUNT_NAME
+AZURE_ACCOUNT_KEY = secrets.AZURE_ACCOUNT_KEY
+AZURE_CONTAINER = secrets.AZURE_CONTAINER
+AZURE_CUSTOM_DOMAIN = f"{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    #  'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
-
+CORS_ALLOW_CREDENTIALS = True
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+CSRF_COOKIE_SAMESITE = None
+DCS_SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
 
 
 ROOT_URLCONF = 'preloved.urls'
