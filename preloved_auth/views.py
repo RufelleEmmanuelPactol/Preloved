@@ -282,7 +282,24 @@ class VerificationController:
         to_verify = []
         for user in ShopVerification.objects.filter(status=0):
             to_verify.append(user.id)
-        return JsonResponse({'pending' : to_verify})
+        final = []
+        for pending in to_verify:
+            user = None
+            shop_owner = None
+            try:
+                shop_owner = ShopOwner.objects.filter(id=pending).first()
+                user = User.objects.filter(id=shop_owner.userID_id).first()
+            except Exception as e:
+                return JsonResponse({'error': 'Cannot find queried user.'}, status=400)
+            shop_details = {}
+            shop_details['id'] = pending
+            shop_details['isVerified'] = shop_owner.isVerified
+            shop_details['email'] = user.email
+            shop_details['first_name'] = user.first_name
+            shop_details['last_name'] = user.last_name
+            final.append(shop_details)
+
+        return JsonResponse({'response' : final})
 
     def approve_or_reject(self, request):
         if request.method != 'POST':
