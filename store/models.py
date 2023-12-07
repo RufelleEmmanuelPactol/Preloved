@@ -20,6 +20,7 @@ class Item(models.Model):
     description = models.TextField()
     isFeminine = models.BooleanField(default=True)
     price = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
+    isTaken = models.IntegerField(default=0)
 
 
     def __str__(self):

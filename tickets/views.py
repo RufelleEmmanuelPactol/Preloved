@@ -3,7 +3,61 @@ from django.views import View
 from datetime import datetime
 from .models import Ticket, Status
 from django.http import JsonResponse
+from store.models import *
+
+
+
+def return_not_post():
+    return JsonResponse({'error': 'not a post-type request'}, status=400)
+
+
+def thumbnailify(id):
+    set = Slug.objects.filter(itemID=id, isThumbnail=1)
+    if set is None:
+        return 1
+    return 0
+
+
 # Create your views here.
+
+def return_id_not_found():
+    return JsonResponse({'error': 'Specified id not found.'}, status=400)
+
+
+def return_not_auth():
+    # raise Exception("User not authenticated")
+    return JsonResponse({'error': 'user not authenticated'}, status=400)
+
+# Create your views here.
+
+
+
+
+class PurchaseController:
+
+    @staticmethod
+    def purchase_item(request):
+        try:
+            if request.method != 'POST':
+                return return_not_post()
+            if not request.user.is_authenticated:
+                return return_not_auth()
+            id = request.user
+            itemID = int(request.POST.get('itemID'))
+            item = Item.objects.filter(itemID=itemID).first()
+            if item is None:
+                return_id_not_found()
+            t = Ticket(itemID_id=item, status_id=Status.objects.filter(statusID=1).first(), storeID_id=item.storeID, userID_id=
+                   request.user)
+            item.isTaken = 1
+            t.save()
+            item.save()
+            return JsonResponse({'response' : 'OK!', 'ticketID' : t.ticketID})
+        except Exception as e:
+            raise e
+            return JsonResponse({'error': str(e)}, status=400)
+
+
 
 
 

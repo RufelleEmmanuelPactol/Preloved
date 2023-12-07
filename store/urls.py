@@ -8,5 +8,6 @@ urlpatterns = [
     path('add_img_item', ShopController.attach_image_to_item),
     path('get_item_details', ShopController.get_item_details),
     path('get_balance', ShopController.get_balance),
-    path('add_balance', ShopController.add_balance)
+    path('add_balance', ShopController.add_balance),
+
 ]
