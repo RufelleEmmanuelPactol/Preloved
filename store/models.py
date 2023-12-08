@@ -47,7 +47,7 @@ class ItemTag(models.Model):
 
 class Slug(models.Model):
     slugID = models.AutoField(primary_key=True)
-    slug = models.CharField(unique=True, max_length=1048)
+    slug = models.CharField(unique=True, max_length=255)
     itemID = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='slugs')
     isDeleted = models.IntegerField(default=0)
     isThumbnail = models.IntegerField(default=0)

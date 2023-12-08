@@ -131,20 +131,21 @@ WSGI_APPLICATION = 'preloved.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': secrets.DATABASE,
+        'USER': secrets.USER,
         'PASSWORD': secrets.PASSWORD,
         'HOST': secrets.SERVER,
-        'USER': secrets.USER,
         'PORT': secrets.PORT,
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
+
+
 
 
 
