@@ -206,13 +206,11 @@ class VerificationController:
 
         if not owner:
             response['status'] = 'not found'
-        elif owner.idSlug1 is None or owner.idSlug2 is None or owner.selfieSlug is None:
-            response['status'] = 'incomplete'
-        elif owner.idSlug1 is None:
+        elif owner.idSlug1 == '':
             response['status'] = 'id 1 is missing'
-        elif owner.idSlug2 is None:
+        elif owner.idSlug2 == '':
             response['status'] = 'id 2 is missing'
-        elif owner.selfieSlug is None:
+        elif owner.selfieSlug == '':
             response['status'] = 'selfie is missing'
         else:
             response['status'] = 'complete'
