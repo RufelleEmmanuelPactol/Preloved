@@ -56,6 +56,7 @@ class LoginController:
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
                     value['verified'] = s.isVerified
+                    value['shop_owner_id'] = s.userID
 
             value['sessionID'] =  request.COOKIES.get('sessionid')
             return JsonResponse(value)
@@ -346,6 +347,7 @@ class VerificationController:
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
                     value['verified'] = s.isVerified
+                    value['shop_owner_id'] = s.userID
 
 
 
