@@ -55,6 +55,8 @@ class LoginController:
                 else:
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
+                    value['verified'] = s.isVerified
+
             value['sessionID'] =  request.COOKIES.get('sessionid')
             return JsonResponse(value)
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
@@ -343,6 +345,7 @@ class VerificationController:
                 else:
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
+                    value['verified'] = s.isVerified
 
 
 
