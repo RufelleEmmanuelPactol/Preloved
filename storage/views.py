@@ -13,8 +13,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 class StorageWorker:
 
     def upload_in_namespace(self, request, file, namespace="", slug="", extension=""):
-        if not request.user.is_authenticated:
-            return None
         if len(slug) == 0:
             slug = file.name
         if request.user.is_authenticated:

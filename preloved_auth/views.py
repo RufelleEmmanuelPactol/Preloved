@@ -167,8 +167,6 @@ class SignUpController:
             slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
-            if file_path is not None:
-                return return_not_auth()
             slugs.idSlug2 = file_path
             slugs.save()
             return JsonResponse({'response': 'Ok!'})
@@ -183,8 +181,6 @@ class SignUpController:
             slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
-            if file_path is not None:
-                return return_not_auth()
             slugs.selfieSlug = file_path
             slugs.save()
             return JsonResponse({'response': 'Ok!'})
