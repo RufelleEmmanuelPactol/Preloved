@@ -1,10 +1,11 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Item, Store, Tag, Slug, ItemTag
+from .models import *
 from preloved_auth.models import ShopOwner, Location
 from storage.views import StorageWorker
 
 storage_worker = StorageWorker()
+
 
 def return_not_post():
     return JsonResponse({'error': 'not a post-type request'}, status=400)
@@ -79,18 +80,27 @@ class ShopController:
         name = POST.get('name')
         tagID = int(POST.get('tagID'))
         price = float(POST.get('price'))
+        size = POST.get('size')
+        valid_sizes = ('XL', 'XS', 'S', 'M', 'L')
+        if size not in valid_sizes:
+            return JsonResponse(
+                {'error': 'The size "' + size + '" is not valid. Please use valid sizes ' + str(valid_sizes) + "."},
+                status=400)
 
         t = Tag.objects.filter(id=tagID)
-
-
-
 
         if store is None:
             return JsonResponse({'error': 'Shop has no store'}, status=400)
         item = Item(storeID=store, description=description, isFeminine=style, name=name, price=price)
         item.save()
+        self.attach_size_to_item(item.itemID, size)
         ItemTag(tag=t, item=item).save()
         return JsonResponse({'response': 'Ok!', 'generatedID': item.itemID})
+
+    def attach_size_to_item(self, item_id, size):
+        s = Size.objects.filter(sizeType=size).first()
+        i = Item.objects.filter(itemID=item_id).first()
+        i.size = s
 
     def get_all_tags(self, request):
         tags = {}
@@ -120,7 +130,6 @@ class ShopController:
         if request.method != 'POST':
             return return_not_post()
 
-
         imgStream = request.FILES.get('img')
         imgID = int(request.POST.get('id'))
         item = Item.objects.filter(itemID=imgID).first()
@@ -131,11 +140,12 @@ class ShopController:
             if i != " ":
                 bld += i
         imgStream.name = bld
-        slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/', slug=imgStream.name)
+        slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/',
+                                                        slug=imgStream.name)
         slug = Slug(slug=slugString, itemID=item, isThumbnail=thumbnailify(imgID))
         slug.save()
 
-        return JsonResponse({'response' : 'Ok!', 'slug' : slugString})
+        return JsonResponse({'response': 'Ok!', 'slug': slugString})
 
     @staticmethod
     def get_item_details(request):
@@ -153,7 +163,6 @@ class ShopController:
         response['description'] = retrieved.description
         response['isFeminine'] = bool(retrieved.isFeminine)
         return JsonResponse(response)
-
 
     @staticmethod
     def get_balance(request):
@@ -177,10 +186,7 @@ class ShopController:
             return return_id_not_found()
         owner.balance = float(request.POST['increase'])
         owner.save()
-        return JsonResponse({'response' : 'OK!', 'balance': owner.balance})
-
-
-
+        return JsonResponse({'response': 'OK!', 'balance': owner.balance})
 
 
 shopController = ShopController()
@@ -196,5 +202,3 @@ def get_all_tags(request):
 
 def create_new_shop(request):
     return shopController.create_new_shop(request)
-
-
