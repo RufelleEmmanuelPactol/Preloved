@@ -1,3 +1,6 @@
+import random
+from functools import wraps
+
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import *
@@ -5,6 +8,22 @@ from preloved_auth.models import ShopOwner, Location
 from storage.views import StorageWorker
 
 storage_worker = StorageWorker()
+
+
+def check_post(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+
+        if request.method != "POST":
+            return return_not_post()
+
+        # Call the original view function
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
 
 
 def return_not_post():
@@ -32,7 +51,9 @@ def return_not_auth():
 class ShopController:
 
     @staticmethod
-    def get_store_owner(request):
+    def get_store_owner(request) -> ShopOwner | None:
+        if not request.user.is_authenticated:
+            return_not_auth()
         try:
             return ShopOwner.objects.filter(userID=request.user).first()
         except Exception as e:
@@ -41,7 +62,7 @@ class ShopController:
     @staticmethod
     def get_store(request):
         try:
-            owner = self.get_store_owner(request)
+            owner = ShopController.get_store_owner(request)
 
             return Store.objects.filter(shopOwnerID=owner).first()
         except Exception as e:
@@ -189,8 +210,64 @@ class ShopController:
         return JsonResponse({'response': 'OK!', 'balance': owner.balance})
 
 
-shopController = ShopController()
+    @staticmethod
+    def modify_balance(request):
+        shopOwner = ShopController.get_store_owner(request)
+        increase = request.POST.get('incr')
+        ShopController.change_balance(shopOwner, increase)
 
+    # Changes the balance without needing a request
+    @staticmethod
+    def change_balance(shopOwner: ShopOwner, modifyByAmount: float):
+        balance = float(shopOwner.balance)
+        balance += modifyByAmount
+        shopOwner.balance = balance
+        shopOwner.save()
+
+
+    @staticmethod
+    def generate_random_vouchers(num_vouchers):
+        voucher_values = [100, 200, 300, 500, 1000, 5000, 10000]
+
+        for _ in range(num_vouchers):
+            voucher_code = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=20))
+            value = random.choice(voucher_values)
+
+            # Create a new LoadVoucher instance
+            voucher = LoadVoucher(voucher_code=voucher_code, value=value)
+            voucher.save()
+
+    # Example usage: generate 10 random vouchers
+
+    @staticmethod
+    @check_post
+    def redeem_voucher(request):
+        code = request.POST.get('code')
+        voucher = LoadVoucher.objects.filter(voucher_code=code).first()
+        if voucher is None:
+            return JsonResponse({'error': f"the voucher '{code}' is not valid"}, status=400)
+        shopOwner = ShopController.get_store_owner(request)
+        if shopOwner is None:
+            return JsonResponse({'error': 'the current user is not a shop owner'}, status=400)
+        if voucher.is_redeemed == 1:
+            return JsonResponse({'error' : 'the voucher has already been redeemed'}, status=400)
+        shopOwner.balance += voucher.value
+        voucher.is_redeemed = 1
+        voucher.save()
+        shopOwner.save()
+        return JsonResponse({'response' : 'ok!', 'new balance': shopOwner.balance})
+
+
+
+
+
+
+
+
+
+
+shopController = ShopController()
+ShopController.generate_random_vouchers(10)
 
 def add_item(request):
     return shopController.add_item(request)
@@ -202,3 +279,5 @@ def get_all_tags(request):
 
 def create_new_shop(request):
     return shopController.create_new_shop(request)
+
+

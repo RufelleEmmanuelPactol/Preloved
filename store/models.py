@@ -61,3 +61,10 @@ class Slug(models.Model):
 
     def __str__(self):
         return self.slug
+
+
+class LoadVoucher(models.Model):
+    voucher_code = models.CharField(max_length=20)
+    value = models.IntegerField()
+    is_redeemed = models.IntegerField(default=0)
+
