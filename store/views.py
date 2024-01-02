@@ -258,6 +258,17 @@ class ShopController:
         return JsonResponse({'response' : 'ok!', 'new balance': shopOwner.balance})
 
 
+    @staticmethod
+    def codegen(request):
+        if request.user.is_superuser:
+            set = LoadVoucher.objects.filter(is_redeemed=0)[:10]
+            returning_value = []
+            for voucher in set:
+                returning_value.append({'voucher code' : voucher.voucher_code, 'amount': voucher.value})
+            return JsonResponse({'message': 'These are valid, non-redeemed vouchers. Only ten valid vouchers are displayed at a time.','valid vouchers: ': returning_value})
+        return JsonResponse({'error' : 'limited credentials'}, status=400)
+
+
 
 
 
