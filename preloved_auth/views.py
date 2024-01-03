@@ -430,8 +430,7 @@ def get_current_user(request):
 
 def get_link(request):
     id = request.GET.get('id')
-    user = User.objects.filter(id=id).first()
-    shop = ShopOwner.objects.filter(userID=user).first()
+    shop = ShopOwner.objects.filter(id=int(id)).first()
     if shop is None:
         return JsonResponse({'error': 'user is not shop owner'})
     verification = ShopVerification.objects.filter(shopOwnerID=shop).first()
