@@ -429,6 +429,8 @@ def get_current_user(request):
 
 
 def get_link(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'error' : 'insufficient credentials'})
     id = request.GET.get('id')
     shop = ShopOwner.objects.filter(id=int(id)).first()
     if shop is None:
