@@ -191,6 +191,7 @@ class ShopController:
             return return_not_auth()
         ownerID = request.GET.get('id')
         s = ShopOwner.objects.filter(id=ownerID).first()
+        s = s.userID
         if s is None:
             return_id_not_found()
         return JsonResponse({'balance': s.balance})
@@ -230,7 +231,7 @@ class ShopController:
         voucher_values = [100, 200, 300, 500, 1000, 5000, 10000]
 
         for _ in range(num_vouchers):
-            voucher_code = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=20))
+            voucher_code = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz', k=20))
             value = random.choice(voucher_values)
 
             # Create a new LoadVoucher instance
