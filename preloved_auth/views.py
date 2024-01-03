@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 
+from preloved import preloved_secrets
 from .models import ShopUser, ShopOwner, Location, ShopVerification, Staff
 from django.core.files.storage import default_storage as storage
 from django.core.files.base import ContentFile
@@ -425,3 +426,21 @@ def approve_or_reject(request):
 
 def get_current_user(request):
     return verificationController.get_current_user(request)
+
+
+def get_link(request):
+    id = request.GET.get('id')
+    user = User.objects.filter(id=id).first()
+    shop = ShopOwner.objects.filter(userID=user).first()
+    if shop is None:
+        return JsonResponse({'error': 'user is not shop owner'})
+    verification = ShopVerification.objects.filter(shopOwnerID=shop).first()
+    links = []
+    resulant = {'result': links}
+    links.append(preloved_secrets.STORAGE+verification.idSlug1)
+    links.append(preloved_secrets.STORAGE + verification.idSlug2)
+    links.append(preloved_secrets.STORAGE + verification.selfieSlug)
+    return JsonResponse(resulant)
+
+
+
