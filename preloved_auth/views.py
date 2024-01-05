@@ -54,9 +54,10 @@ class LoginController:
                     value['user_type'] = 'Verification Officer'
                     value['user_type_int'] = 2
                 else:
+                    shop_ver_instance = ShopVerification.objects.filter(shopOwnerID=s.id).first()
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
-                    value['verified'] = s.isVerified
+                    value['verified'] = shop_ver_instance.status
                     value['shop_owner_id'] = s.id
 
             value['sessionID'] =  request.COOKIES.get('sessionid')
