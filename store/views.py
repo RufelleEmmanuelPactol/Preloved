@@ -1,5 +1,6 @@
 import random
 from functools import wraps
+from urllib import request
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -269,6 +270,36 @@ class ShopController:
                 returning_value.append({'voucher code' : voucher.voucher_code, 'amount': voucher.value})
             return JsonResponse({'message': 'These are valid, non-redeemed vouchers. Only ten valid vouchers are displayed at a time.','valid vouchers: ': returning_value})
         return JsonResponse({'error' : 'limited credentials'}, status=400)
+
+    
+    
+    @staticmethod
+    def get_stores(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        shopOwner = ShopOwner.objects.filter(userID=request.user).first()
+        if shopOwner is None:
+            return JsonResponse({'error' : 'user is not a shop owner / does not have a store'})
+        stores_set = Store.objects.filter(shopOwnerID=shopOwner)
+        stores = []
+        resulting = {
+            "userID" : request.user.id,
+            "shopOwnerID" : shopOwner.id,
+            "email": request.user.username,
+            "phoneNumber" : shopOwner.phoneNumber,
+            "balance" : shopOwner.balance,
+            "isVerified": shopOwner.isVerified,
+            "stores": stores
+        }
+
+        for store in stores_set:
+            store_entity = {}
+            store_entity['storeID'] = store.storeID
+            store_entity['storeName'] = store.storeName
+            store_entity[''] = store.locationID.address_plain
+            stores.append(store_entity)
+
+        return JsonResponse(resulting)
 
 
 
