@@ -109,7 +109,7 @@ class ShopController:
                 {'error': 'The size "' + size + '" is not valid. Please use valid sizes ' + str(valid_sizes) + "."},
                 status=400)
 
-        t = Tag.objects.filter(id=tagID)
+        t = Tag.objects.filter(tagID=tagID).first()
 
         if store is None:
             return JsonResponse({'error': 'Shop has no store'}, status=400)
