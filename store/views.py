@@ -159,11 +159,6 @@ class ShopController:
         item = Item.objects.filter(itemID=imgID).first()
         if item is None:
             return return_id_not_found()
-        bld = ""
-        for i in imgStream.name:
-            if i != " ":
-                bld += i
-        imgStream.name = bld
         slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/',
                                                         slug=imgStream.name)
         if slugString is None:

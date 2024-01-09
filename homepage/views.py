@@ -21,13 +21,15 @@ class HomePageController:
         item: list = request.session['items']
         items = []
         try:
-            items = [item.pop() for _ in range(20)]
+            for i in range(20):
+                items.append(item.pop())
         except IndexError:
             pass
         return JsonResponse({'items': items})
 
     @staticmethod
     def generate_iterative_homepage():
+        print('Iterative homepage is running...')
         items = Item.objects.filter(isTaken=0).order_by('?')
         item_list = []
         for item in items:
