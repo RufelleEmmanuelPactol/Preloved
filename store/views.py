@@ -193,6 +193,8 @@ class ShopController:
             return return_id_not_found()
         response['itemID'] = retrieved.itemID
         response['storeID'] = retrieved.storeID.storeID
+        response['storeName'] = retrieved.storeID.storeName
+        response['size'] = retrieved.size.sizeType
         response['name'] = retrieved.name
         response['description'] = retrieved.description
         response['isFeminine'] = bool(retrieved.isFeminine)
