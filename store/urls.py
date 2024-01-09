@@ -12,6 +12,7 @@ urlpatterns = [
     path('redeem_voucher', ShopController.redeem_voucher),
     path('codegen', ShopController.codegen),
     path('stores', ShopController.get_stores),
-    path('item_images', ShopController.get_item_images)
+    path('item_images', ShopController.get_item_images),
+    path('attach_tag_to_item', ShopController.attach_tag_to_item)
 
 ]

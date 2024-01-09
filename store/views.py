@@ -196,7 +196,25 @@ class ShopController:
         response['name'] = retrieved.name
         response['description'] = retrieved.description
         response['isFeminine'] = bool(retrieved.isFeminine)
+        tags = ItemTag.objects.filter(item=retrieved)
+        item_tags = []
+        for tag in tags:
+            item_tags.append({'tagName': tag.tag.name, 'tagID': tag.tag.tagID})
+        response['tags'] = item_tags
+
         return JsonResponse(response)
+
+    @staticmethod
+    def attach_tag_to_item(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        if not request.method == 'POST':
+            return return_not_post()
+        item = Item.objects.filter(itemID=int(request.POST.get('itemID'))).first()
+        tag = Tag.objects.filter(tagID=int(request.POST.get('tagID'))).first()
+        itemTag = ItemTag(item=item, tag=tag)
+        itemTag.save()
+        return JsonResponse({'response' : 'ok!'})
 
     @staticmethod
     def get_balance(request):
