@@ -97,6 +97,8 @@ class ShopController:
             return return_not_post()
         POST = request.POST
         store = self.get_store(request)
+
+        
         description = POST.get('description')
         style = int(POST.get('isFeminine'))
         name = POST.get('name')
@@ -164,10 +166,25 @@ class ShopController:
         imgStream.name = bld
         slugString = storage_worker.upload_in_namespace(request, imgStream, namespace='item_images/',
                                                         slug=imgStream.name)
+        if slugString is None:
+            return return_not_auth()
         slug = Slug(slug=slugString, itemID=item, isThumbnail=thumbnailify(imgID))
         slug.save()
 
         return JsonResponse({'response': 'Ok!', 'slug': slugString})
+
+    @staticmethod
+    def get_item_images(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        id = request.GET.get('id')
+        item = Item.objects.filter(itemID=id).first()
+        links = Slug.objects.filter(itemID=item)
+        from preloved import preloved_secrets
+        link_list = []
+        for link in links:
+            link_list.append(preloved_secrets.STORAGE + link.slug)
+        return JsonResponse({'id' : id, 'image_links' : link_list})
 
     @staticmethod
     def get_item_details(request):
