@@ -112,10 +112,10 @@ class ShopController:
                 status=400)
 
         t = Tag.objects.filter(tagID=tagID).first()
-
+        size = Size.objects.filter(sizeType=size).first()
         if store is None:
             return JsonResponse({'error': 'Shop has no store'}, status=400)
-        item = Item(storeID=store, description=description, isFeminine=style, name=name, price=price)
+        item = Item(storeID=store, description=description, isFeminine=style, name=name, price=price, size=size)
         item.save()
         self.attach_size_to_item(item.itemID, size)
         ItemTag(tag=t, item=item).save()
