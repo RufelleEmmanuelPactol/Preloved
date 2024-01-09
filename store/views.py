@@ -198,6 +198,7 @@ class ShopController:
         response['name'] = retrieved.name
         response['description'] = retrieved.description
         response['isFeminine'] = bool(retrieved.isFeminine)
+        response['price'] = retrieved.price
         tags = ItemTag.objects.filter(item=retrieved)
         item_tags = []
         for tag in tags:
