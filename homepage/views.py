@@ -43,7 +43,7 @@ class HomePageController:
             map['storeID'] = item.storeID.storeID
             images = []
             map['images'] = images
-            image_slugs = Slug.objects.filter(itemID=item, isDeleted=1)
+            image_slugs = Slug.objects.filter(itemID=item, isDeleted=0)
             for slug in image_slugs:
                 images.append({'link': HomePageController.generate_link(slug.slug), 'slugID' : slug.slugID})
             item_list.append(map)
