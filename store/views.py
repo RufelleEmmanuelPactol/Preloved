@@ -174,7 +174,7 @@ class ShopController:
             return return_not_auth()
         id = request.GET.get('id')
         item = Item.objects.filter(itemID=id).first()
-        links = Slug.objects.filter(itemID=item)
+        links = Slug.objects.filter(itemID=item, isDeleted=0)
         from preloved import preloved_secrets
         link_list = []
         for link in links:
