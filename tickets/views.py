@@ -42,7 +42,7 @@ class PurchaseController:
                 return return_not_post()
             if not request.user.is_authenticated:
                 return return_not_auth()
-            id = request.user
+            id = request.user.id
             itemID = int(request.POST.get('itemID'))
             storeID = int(request.POST.get('storeID'))
             item = Item.objects.filter(itemID=itemID).first()
