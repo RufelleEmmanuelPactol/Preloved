@@ -48,8 +48,7 @@ class PurchaseController:
             item = Item.objects.filter(itemID=itemID).first()
             if item is None:
                 return_id_not_found()
-            status = Status.objects.filter(statusID=1).first()
-            t = Ticket(itemID_id=itemID, status_id=status.statusID, storeID_id=storeID, userID_id=id)
+            t = Ticket(itemID_id=itemID, status_id=Status.objects.filter(statusID=1).first(), storeID_id=storeID, userID_id=id)
             item.isTaken = 1
             t.save()
             item.save()
