@@ -44,11 +44,12 @@ class PurchaseController:
                 return return_not_auth()
             id = request.user
             itemID = int(request.POST.get('itemID'))
+            storeID = int(request.POST.get('storeID'))
             item = Item.objects.filter(itemID=itemID).first()
             if item is None:
                 return_id_not_found()
-            t = Ticket(itemID_id=item, status_id=Status.objects.filter(statusID=1).first(), storeID_id=item.storeID, userID_id=
-                   request.user)
+            status = Status.objects.filter(statusID=1).first()
+            t = Ticket(itemID_id=itemID, status_id=status.statusID, storeID_id=storeID, userID_id=id)
             item.isTaken = 1
             t.save()
             item.save()
