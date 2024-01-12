@@ -53,9 +53,14 @@ INSTALLED_APPS = [
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_EXPOSE_HEADERS = ["Set-Cookie"]
 CORS_ALLOWED_ORIGINS = [
-    'https://prelovedbackend.azurewebsites.net',
-    'https://preloved-theta.vercel.app/'
-
+    "http://localhost:3000",  # Assuming your frontend runs on this port
+    "http://127.0.0.1:3000",  # Alternate localhost address
+    "http://localhost:8000",  # Assuming your frontend runs on a different server
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:5500", # Alternate localhost address
+    'https://prelovedbackends.azurewebsites.net',
+    'http://localhost:5173',
+    "http://127.0.0.1:5173",
 ]
 
 
@@ -123,8 +128,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'preloved.wsgi.application'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
