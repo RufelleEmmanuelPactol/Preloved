@@ -223,11 +223,12 @@ class ShopController:
     def get_balance(request):
         if not request.user.is_authenticated:
             return return_not_auth()
-        ownerID = request.GET.get('id')
+        ownerID = int(request.GET.get('id'))
         s = ShopOwner.objects.filter(userID=ownerID).first()
 
         if s is None:
             return_id_not_found()
+            
         return JsonResponse({'balance': s.balance})
 
     @staticmethod
