@@ -334,6 +334,7 @@ class VerificationController:
             elif s is None:
                 value['user_type'] = 'Shop User'
                 value['user_type_int'] = 0
+                value['shop_user_id'] = ShopUser.objects.get(userID=request.user).id
             else:
                 staff = Staff.objects.filter(uID=request.user).first()
                 if staff is not None:

@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'store',
     'tickets',
-    'homepage'
+    'homepage',
+    'preloved_collections'
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_EXPOSE_HEADERS = ["Set-Cookie"]
