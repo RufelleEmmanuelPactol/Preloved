@@ -297,7 +297,7 @@ class ShopController:
     @staticmethod
     def codegen(request):
         if request.user.is_superuser:
-            set = LoadVoucher.objects.filter(is_redeemed=0)[:10]
+            set = LoadVoucher.objects.filter(is_redeemed=0).order_by('?')[:10]
             returning_value = []
             for voucher in set:
                 returning_value.append({'voucher code' : voucher.voucher_code, 'amount': voucher.value})
