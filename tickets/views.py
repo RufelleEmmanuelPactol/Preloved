@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views import View
 from datetime import datetime
+
+from preloved_auth.models import ShopUser
 from .models import Ticket, Status
 from django.http import JsonResponse
 from store.models import *
@@ -43,12 +45,18 @@ class PurchaseController:
             if not request.user.is_authenticated:
                 return return_not_auth()
             id = request.user.id
+            shopUser = ShopUser.objects.filter(id=id).first()
+            if shopUser is None:
+                return JsonResponse({'error': 'user is not a shop user'}, status=400)
             itemID = int(request.POST.get('itemID'))
             storeID = int(request.POST.get('storeID'))
+            storeID = Store.objects.filter(storeID=storeID).first()
+            if storeID is None:
+                return return_id_not_found()
             item = Item.objects.filter(itemID=itemID).first()
             if item is None:
                 return_id_not_found()
-            t = Ticket(itemID_id=itemID, status_id=Status.objects.filter(statusID=1).first(), storeID_id=storeID, userID_id=id)
+            t = Ticket(itemID=item, status=Status.objects.filter(statusID=1).first(), storeID=storeID, userID =shopUser)
             item.isTaken = 1
             t.save()
             item.save()
