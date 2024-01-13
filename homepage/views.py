@@ -52,7 +52,6 @@ class HomePageController:
             item_list.append(map)
         if len(item_list) < 50:
             return HomePageController.generate_iterative_homepage(item_list)
-            return HomePaitem_list
         return item_list
 
     @staticmethod
