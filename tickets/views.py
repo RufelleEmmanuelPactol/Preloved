@@ -94,6 +94,16 @@ class TicketController(View):
         if ticketID is not None:
             ticket_obj: Ticket = Ticket.objects.filter(ticketID=ticketID).first()
             ticket['ticketID'] = ticket_obj.ticketID
+            if ticket_obj.status.level == 1:
+                if ticket_obj.expected_seller_fulfillment < timezone.now().date():
+                    ticket_obj.status = Status.objects.get(statusID=7)
+                    ticket_obj.status.save()
+                    ticket_obj.save()
+            elif ticket_obj.status.level == 2:
+                if ticket_obj.expected_buyer_fulfillment < timezone.now().date():
+                    ticket_obj.status = Status.objects.get(statusID=8)
+                    ticket_obj.status.save()
+                    ticket_obj.save()
             ticket['userID'] = ticket_obj.userID.userID.id
             ticket['storeID'] = ticket_obj.storeID.storeID
             ticket['itemID'] = ticket_obj.itemID.itemID
@@ -101,14 +111,7 @@ class TicketController(View):
             ticket['expected_seller_fulfillment'] = ticket_obj.expected_seller_fulfillment
             ticket['expected_buyer_fulfillment'] = ticket_obj.expected_buyer_fulfillment
             ## compare dates if it is more than current ime
-            if ticket_obj.status == 1:
-                if ticket_obj.expected_seller_fulfillment < timezone.now():
-                    ticket_obj.status.statusID = 7
-                    ticket_obj.status.save()
-            elif ticket_obj.status == 2:
-                if ticket_obj.expected_buyer_fulfillment < timezone.now():
-                    ticket_obj.status.statusID = 8
-                    ticket_obj.status.save()
+
 
             status_obj: Status = ticket_obj.status
             if status_obj:
