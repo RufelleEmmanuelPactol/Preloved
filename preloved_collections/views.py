@@ -38,6 +38,16 @@ class CollectionController:
         user = CollectionController.get_shop_user(request)
         if not isinstance(user, ShopUser):
             return user
+        
+        collectionID = int(request.POST.get('collectionID'))
+        if collectionID is None:
+            return JsonResponse({'error': 'Invalid collection ID'}, status=400)
+        collection = Collection.objects.get(id=collectionID)
+        if collection is None:
+            return JsonResponse({'error': 'Invalid collection ID'}, status=400)
+        Collection.objects.get(user=user, id=collectionID).delete()
+        return JsonResponse({'success': True}, status=200)
+
 
     @staticmethod
     def get_collections(request):
