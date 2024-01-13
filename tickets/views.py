@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render
 from django.views import View
 from datetime import datetime
@@ -75,40 +76,47 @@ class TicketController(View):
     def post(self, request):
         userID = request.POST.get('userID')
         itemID = request.POST.get('itemID')
-        Ticket.objects.create(userID=userID, itemID=itemID, status=1)
+        userID = User.objects.get(id=userID)
+        userID = ShopUser.objects.get(userID=userID)
+        itemID = Item.objects.get(itemID=itemID)
+        print(userID, itemID, 'details')
+        if userID is None or itemID is None:
+            return JsonResponse({'error': 'shopUserID and itemID are required'}, status=400)
+        Ticket.objects.create(userID=userID, storeID=itemID.storeID, itemID=itemID)
         return JsonResponse({'status': 'OK!'})
 
 
     def get(self, request):
         ticket = {}
-        ticketID = request.GET.get('ticketID', 0)
-        userID = request.GET.get('userID', 0)
-        if ticketID != 0:
-            ticket_obj = Ticket.objects.filter(ticketID=ticketID).first()
+        ticketID = request.GET.get('ticketID')
+        userID = request.GET.get('userID')
+        if ticketID is not None:
+            ticket_obj: Ticket = Ticket.objects.filter(ticketID=ticketID).first()
             ticket['ticketID'] = ticket_obj.ticketID
-            ticket['userID'] = ticket_obj.userID
-            ticket['storeID'] = ticket_obj.storeID
-            ticket['itemID'] = ticket_obj.itemID
-            stat = ticket_obj.status
-            status_obj = Status.objects.filter(statusID=stat).first()
+            ticket['userID'] = ticket_obj.userID.userID.id
+            ticket['storeID'] = ticket_obj.storeID.storeID
+            ticket['itemID'] = ticket_obj.itemID.itemID
+            status_obj: Status = ticket_obj.status
             if status_obj:
                 ticket['status'] = status_obj.status_name
-                ticket['statusINT'] = stat
+                ticket['statusINT'] = status_obj.level
             else:
                 ticket['status'] = "Status not found"
-                ticket['statusINT'] = stat
+                ticket['statusINT'] = status_obj.level
             return JsonResponse(ticket)
         if userID is not None:
-            tickets = Ticket.objects.filter(userID=userID)
+            user = User.objects.get(id=userID)
+            shopUser = ShopUser.objects.get(userID=user)
+            tickets = Ticket.objects.filter(userID=shopUser)
             ticket_list = []
 
             for ticket_obj in tickets:
                 ticket_data = {
                     'ticketID': ticket_obj.ticketID,
-                    'userID': ticket_obj.userID,
-                    'storeID': ticket_obj.storeID,
-                    'itemID': ticket_obj.itemID,
-                    'status': Status.objects.filter(statusID=ticket_obj.status).first().status_name
+                    'userID': ticket_obj.userID.userID.id,
+                    'storeID': ticket_obj.storeID.storeID,
+                    'itemID': ticket_obj.itemID.itemID,
+                    'status': ticket_obj.status.status_name
                 }
                 ticket_list.append(ticket_data)
 

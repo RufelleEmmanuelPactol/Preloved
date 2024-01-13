@@ -16,7 +16,7 @@ class Ticket(models.Model):
     userID = models.ForeignKey(ShopUser, on_delete=models.CASCADE, related_name='tickets', default=0)
     storeID = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='tickets')
     itemID = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='tickets')
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='tickets', default=1)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='tickets', default=Status.objects.get(statusID=1))
 
     def __str__(self):
         return f"Ticket {self.ticketID} - Status: {self.status}"
