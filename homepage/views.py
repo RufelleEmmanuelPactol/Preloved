@@ -21,7 +21,7 @@ class HomePageController:
         item: list = request.session['items']
         items = []
         try:
-            for i in range(20):
+            for i in range(50):
                 items.append(item.pop())
         except IndexError:
             pass
