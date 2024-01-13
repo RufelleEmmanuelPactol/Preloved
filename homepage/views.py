@@ -29,7 +29,6 @@ class HomePageController:
 
     @staticmethod
     def generate_iterative_homepage():
-        print('Iterative homepage is running...')
         items = Item.objects.filter(isTaken=0).order_by('?')
         item_list = []
         for item in items:

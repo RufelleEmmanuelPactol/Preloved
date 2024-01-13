@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.shortcuts import render
+from django.utils import timezone
 from django.views import View
 from datetime import datetime
 
@@ -57,14 +58,14 @@ class PurchaseController:
             item = Item.objects.filter(itemID=itemID).first()
             if item is None:
                 return_id_not_found()
-            t = Ticket(itemID=item, status=Status.objects.filter(statusID=1).first(), storeID=storeID, userID =shopUser)
-            item.isTaken = 1
+            t = Ticket(itemID=item, status=Status.objects.filter(statusID=1).first(), storeID=storeID, userID =shopUser, expected_seller_fulfillment=(timezone.now() + timezone.timedelta(days=5)))
             t.save()
             item.save()
             return JsonResponse({'response' : 'OK!', 'ticketID' : t.ticketID})
         except Exception as e:
             raise e
             return JsonResponse({'error': str(e)}, status=400)
+
 
 
 
@@ -96,6 +97,19 @@ class TicketController(View):
             ticket['userID'] = ticket_obj.userID.userID.id
             ticket['storeID'] = ticket_obj.storeID.storeID
             ticket['itemID'] = ticket_obj.itemID.itemID
+            ticket['createdAt'] = ticket_obj.created
+            ticket['expected_seller_fulfillment'] = ticket_obj.expected_seller_fulfillment
+            ticket['expected_buyer_fulfillment'] = ticket_obj.expected_buyer_fulfillment
+            ## compare dates if it is more than current ime
+            if ticket_obj.status == 1:
+                if ticket_obj.expected_seller_fulfillment < timezone.now():
+                    ticket_obj.status.statusID = 7
+                    ticket_obj.status.save()
+            elif ticket_obj.status == 2:
+                if ticket_obj.expected_buyer_fulfillment < timezone.now():
+                    ticket_obj.status.statusID = 8
+                    ticket_obj.status.save()
+
             status_obj: Status = ticket_obj.status
             if status_obj:
                 ticket['status'] = status_obj.status_name
@@ -123,3 +137,40 @@ class TicketController(View):
             return JsonResponse({'tickets': ticket_list})
         else:
             return JsonResponse({'error': 'Invalid parameters'})
+
+    @staticmethod
+    def get_statuses(request):
+        statuses_set = Status.objects.all()
+        statuses = []
+        for status in statuses_set:
+            statuses.append(
+                {
+                    'id': status.statusID,
+                    'name': status.status_name,
+                    'level': status.level
+                }
+            )
+        return JsonResponse({'statuses': statuses})
+
+    @staticmethod
+    def update_ticket_status(request):
+        if request.method != 'POST':
+            return return_not_post()
+        sID = request.POST.get('statusID')
+        tID = request.POST.get('ticketID')
+        if sID is None or tID is None:
+            return JsonResponse({'error': 'Invalid parameters'})
+        status = Status.objects.get(statusID=sID)
+        ticket = Ticket.objects.get(ticketID=tID)
+        if status.level >= 3:
+            ticket.itemID.isTaken = 1
+            ticket.itemID.save()
+        else:
+            ticket.itemID.isTaken = 0
+            ticket.itemID.save()
+        ticket.save()
+        if status is None or ticket is None:
+            return JsonResponse({'error': 'Invalid status or ticket IDs'})
+        ticket.status = status
+        ticket.save()
+        return JsonResponse({'success': True})
