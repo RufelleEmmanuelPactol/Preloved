@@ -48,7 +48,8 @@ class HomePageController:
             for slug in image_slugs:
                 images.append({'link': HomePageController.generate_link(slug.slug), 'slugID' : slug.slugID})
             item_list.append(map)
-
+        if len(item_list) < 50:
+            return HomePageController.generate_iterative_homepage() + item_list
         return item_list
 
     @staticmethod
