@@ -165,6 +165,9 @@ class TicketController(View):
         if status.level >= 3:
             ticket.itemID.isTaken = 1
             ticket.itemID.save()
+        elif status.level == 2:
+            ticket.expected_buyer_fulfillment = timezone.now() + timezone.timedelta(days=5)
+            ticket.save()
         else:
             ticket.itemID.isTaken = 0
             ticket.itemID.save()
