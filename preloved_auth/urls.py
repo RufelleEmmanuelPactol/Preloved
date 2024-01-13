@@ -20,6 +20,8 @@ urlpatterns = [
     path('verification/get_shop_owner_details', get_shop_owner_details),
     path('verification/get_list_pending', get_list_pending),
     path('verification/approve_or_reject', approve_or_reject),
-    path('verification/test_for_links', get_link)
+    path('verification/test_for_links', get_link),
+    path('location/attach_location', LocationController.attach_location),
+    path('location/get_route', LocationController.get_location_link)
 
 ]

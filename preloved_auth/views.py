@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 
 from preloved import preloved_secrets
-from .models import ShopUser, ShopOwner, Location, ShopVerification, Staff
+from .models import ShopUser, ShopOwner, Location, ShopVerification, Staff, Store
 from django.core.files.storage import default_storage as storage
 from django.core.files.base import ContentFile
 from datetime import datetime
@@ -444,6 +444,53 @@ def get_link(request):
     links.append(preloved_secrets.STORAGE + verification.idSlug2)
     links.append(preloved_secrets.STORAGE + verification.selfieSlug)
     return JsonResponse(resulant)
+
+
+
+class LocationController:
+
+    @staticmethod
+    def attach_location(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        location = Location(longitude=request.POST.get('long'), latitude=request.POST.get('lat'))
+        location.save()
+        owner:ShopOwner = ShopOwner.objects.filter(userID=request.user).first()
+        if owner is not None:
+            owner.locationID = location
+            owner.save()
+            store = Store.objects.get(ownerID=owner)
+            store.locationID = location
+            store.save()
+            return JsonResponse({'success': True})
+
+        user = ShopUser.objects.get(userID=request.user)
+        user.locationID = location
+        return JsonResponse({'success': True})
+
+    @staticmethod
+    def get_location_link(request):
+        shopUser = ShopUser.objects.get(userID=request.user)
+        shopID = request.GET.get('shopID')
+        if shopID is None:
+            return JsonResponse({'error' : 'invalid shop id'})
+        store = Store.objects.get(storeID=shopID)
+        if store.locationID.latitude is None or store.locationID.longitude is None:
+            return JsonResponse({'error' : 'Shop does not have inferred location yet'})
+        return JsonResponse({'path':
+                             LocationController.generate_maps_link(shopUser.locationID.latitude,
+                                                                   shopUser.locationID.longitude,
+                                                                   store.locationID.latitude,
+                                                                   store.locationID.longitude)})
+
+
+    @staticmethod
+    def generate_maps_link(origin_lat, origin_lng, destination_lat, destination_lng):
+        base_url = "https://www.google.com/maps/dir/?api=1"
+        origin = f"origin={origin_lat},{origin_lng}"
+        destination = f"destination={destination_lat},{destination_lng}"
+        maps_link = f"{base_url}&{origin}&{destination}"
+        return maps_link
 
 
 
