@@ -149,10 +149,10 @@ class TicketController(View):
                 ticket['statusINT'] = status_obj.level
             return JsonResponse(ticket)
         if userID is not None:
-            user = User.objects.get(id=userID)
-            shopUser = ShopUser.objects.get(userID=user)
-            tickets = Ticket.objects.filter(userID=shopUser)
+            user = ShopUser.objects.get(id=userID)
+            tickets = Ticket.objects.filter(userID=user)
             ticket_list = []
+            print(tickets)
 
             for ticket_obj in tickets:
                 ticket_data = {
