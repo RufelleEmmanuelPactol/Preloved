@@ -28,9 +28,11 @@ class HomePageController:
         return JsonResponse({'items': items})
 
     @staticmethod
-    def generate_iterative_homepage():
+    def generate_iterative_homepage(past=None):
         items = Item.objects.filter(isTaken=0).order_by('?')
         item_list = []
+        if past is not None:
+            item_list += past
         for item in items:
             if item.storeID.shopOwnerID.balance == 0:
                 continue
@@ -49,7 +51,8 @@ class HomePageController:
                 images.append({'link': HomePageController.generate_link(slug.slug), 'slugID' : slug.slugID})
             item_list.append(map)
         if len(item_list) < 50:
-            return HomePageController.generate_iterative_homepage() + item_list
+            return HomePageController.generate_iterative_homepage(item_list)
+            return HomePaitem_list
         return item_list
 
     @staticmethod
