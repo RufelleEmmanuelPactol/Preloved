@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-
+from .models import *
 # Create your views here.
 
 from preloved_auth.models import *
@@ -69,4 +69,46 @@ class HomePageController:
         return JsonResponse({'results': query_result})
 
 
+
+class CartController:
+
+    @staticmethod
+    def add_to_cart(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        if request.method != 'POST':
+            return return_not_post()
+        item = request.POST.get('itemID')
+        Cart(user=request.user, itemID=item).save()
+        return JsonResponse({'success': True})
+
+    @staticmethod
+    def remove_from_cart(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        if request.method != 'POST':
+            return return_not_post()
+        item = request.POST.get('itemID')
+        item = Cart.objects.filter(user=request.user, itemID=item)
+        if item is None:
+            return JsonResponse({'success': False})
+        item.delete()
+        return JsonResponse({'success': True})
+
+    @staticmethod
+    def get_cart_items(request):
+        if not request.user.is_authenticated:
+            return return_not_auth
+        cartItems = Cart.objects.filter(user=request.user)
+        shoppingCart = []
+        for item in cartItems:
+            firstItem: Slug = Slug.objects.filter(isDeleted=0, itemID=item.item).first()
+            shoppingCart.append({
+                'itemID': item.item.itemID,
+                'price': item.item.price,
+                'storeName': item.item.storeID.storeName,
+                'size': item.item.size.sizeType,
+                'thumbnail': preloved_secrets.STORAGE + firstItem.slug
+            })
+        return JsonResponse({'cart':shoppingCart})
 

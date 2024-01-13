@@ -38,6 +38,7 @@ def return_not_auth():
 
 
 class PurchaseController:
+    
 
     @staticmethod
     def purchase_item(request):
@@ -73,6 +74,32 @@ class PurchaseController:
 
 
 class TicketController(View):
+
+    @staticmethod
+    def get_shop_ids(request):
+        shopOwner = ShopOwner.objects.filter(userID=request.user).first()
+        if shopOwner is None:
+            return JsonResponse({'error': 'current user is not a shop owner'}, status=400)
+        shop: Store = Store.objects.filter(shopOwnerID=shopOwner).first()
+        ticket_result = Ticket.objects.filter(storeID=shop)
+        tickets = []
+        for ticket in ticket_result:
+            tickets.append(
+                {
+                    'ticketID': ticket.ticketID,
+                    'itemName': ticket.itemID.name,
+                    'level / status_id': ticket.status.level,
+                    'statusID': ticket.status.statusID,
+                    'currentStatusName': ticket.status.status_name,
+                    'itemID': ticket.itemID.itemID,
+                    'userID': ticket.userID.userID.id,
+                    'customerFirstName': ticket.userID.userID.first_name,
+                    'customerLastName': ticket.userID.userID.last_name,
+                    'customerEmail': ticket.userID.userID.email,
+                    'customerPhone': ticket.userID.phone_no,
+                }
+            )
+        return JsonResponse({'tickets': tickets})
 
     def post(self, request):
         userID = request.POST.get('userID')
