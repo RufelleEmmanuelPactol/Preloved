@@ -53,4 +53,20 @@ class HomePageController:
         return preloved_secrets.STORAGE + slug
 
 
+    @staticmethod
+    def search(request):
+        params = request.GET.get('q')
+        from django.db import connections
+        cursor = connections['default'].cursor()
+        cursor.callproc('search', [params])
+        results = cursor.fetchall()
+        query_result = []
+        for result in results:
+            query_result.append({
+                'itemID': result[0],
+                'name': result[1]
+            })
+        return JsonResponse({'results': query_result})
+
+
 
