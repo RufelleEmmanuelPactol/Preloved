@@ -32,6 +32,8 @@ class HomePageController:
         items = Item.objects.filter(isTaken=0).order_by('?')
         item_list = []
         for item in items:
+            if item.storeID.shopOwnerID.balance == 0:
+                continue
             map = {}
             map['item_id'] = item.itemID
             map['item_name'] = item.name
@@ -46,6 +48,7 @@ class HomePageController:
             for slug in image_slugs:
                 images.append({'link': HomePageController.generate_link(slug.slug), 'slugID' : slug.slugID})
             item_list.append(map)
+
         return item_list
 
     @staticmethod
