@@ -13,6 +13,7 @@ urlpatterns = [
     path('codegen', ShopController.codegen),
     path('stores', ShopController.get_stores),
     path('item_images', ShopController.get_item_images),
-    path('attach_tag_to_item', ShopController.attach_tag_to_item)
+    path('attach_tag_to_item', ShopController.attach_tag_to_item),
+    path('get_shop_details', ShopController.get_shop_details)
 
 ]

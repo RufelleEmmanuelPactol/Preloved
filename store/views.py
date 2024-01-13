@@ -334,6 +334,25 @@ class ShopController:
 
         return JsonResponse(resulting)
 
+    @staticmethod
+    def get_shop_details(request):
+        query = request.GET.get('shopID')
+        if query is None:
+            return JsonResponse({'error' : 'shopID is required'})
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        shop: Store = Store.objects.filter(storeID=query).first()
+        if shop is None:
+            return return_id_not_found()
+        return JsonResponse({
+            'shopID': query,
+            'shopName': shop.storeName,
+            'location' : shop.locationID.address_plain
+        })
+
+
+
+
 
 
 
