@@ -93,6 +93,7 @@ class CartController:
         if request.method != 'POST':
             return return_not_post()
         item = request.POST.get('itemID')
+        item - Item.objects.get(itemID=item).first()
         item = Cart.objects.filter(user=request.user, itemID=item)
         if item is None:
             return JsonResponse({'success': False})
