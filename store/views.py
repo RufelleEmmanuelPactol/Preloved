@@ -350,6 +350,27 @@ class ShopController:
             'location' : shop.locationID.address_plain
         })
 
+    @staticmethod
+    def get_shop_items(request):
+        if not request.user.is_authenticated:
+            return_not_auth()
+        owner = ShopController.get_store_owner(request)
+        if owner is None:
+            return return_not_auth()
+        shop: Store = Store.objects.filter(shopOwnerID=owner).first()
+        if shop is None:
+            return JsonResponse({'error' : 'owner does not have a shop'})
+        item_set = Item.objects.filter(storeID=shop)
+        items = []
+        for item in item_set:
+            item_entity = {
+                'itemID': item.itemID,
+                'itemName': item.name
+            }
+            items.append(item_entity)
+        return JsonResponse({'items:': items})
+
+
 
 
 
