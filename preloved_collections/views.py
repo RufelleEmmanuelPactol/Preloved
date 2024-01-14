@@ -108,6 +108,13 @@ class CollectionController:
         item = Item.objects.get(itemID=item)
         if item is None:
             return JsonResponse({'error': 'Invalid item ID'}, status=400)
+        
+        try:
+            temp = CollectionItemUser.objects.filter(user=user, collection=collection, item=item).first()
+            return JsonResponse({'error': 'Item is already in Collection'}, status=400)
+        except Exception as e:
+            pass
+            
         CollectionItemUser.objects.create(user=user, collection=collection, item=item)
         return JsonResponse({'success': True}, status=200)
 
