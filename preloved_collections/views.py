@@ -111,7 +111,7 @@ class CollectionController:
         
         try:
             temp = CollectionItemUser.objects.filter(user=user, collection=collection, item=item).first()
-            if temp is None:
+            if temp is not None:
                 return JsonResponse({'error': 'Item is already in Collection'}, status=400)
         except Exception as e:
             pass
