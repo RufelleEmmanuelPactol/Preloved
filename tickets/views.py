@@ -160,7 +160,12 @@ class TicketController(View):
                     'userID': ticket_obj.userID.userID.id,
                     'storeID': ticket_obj.storeID.storeID,
                     'itemID': ticket_obj.itemID.itemID,
-                    'status': ticket_obj.status.status_name
+                    'status': ticket_obj.status.status_name,
+                    'expected_buyer_fulfillment': ticket_obj.expected_buyer_fulfillment,
+                    'expected_seller_fulfillment': ticket_obj.expected_seller_fulfillment,
+                    'statusLevel': ticket_obj.status.level,
+                    'statusID': ticket_obj.status.statusID
+
                 }
                 ticket_list.append(ticket_data)
 
