@@ -82,7 +82,7 @@ class CartController:
         if request.method != 'POST':
             return return_not_post()
         item = request.POST.get('itemID')
-        Cart(user=request.user, itemID=item).save()
+        Cart(user=request.user, item=item).save()
         return JsonResponse({'success': True})
 
     @staticmethod
