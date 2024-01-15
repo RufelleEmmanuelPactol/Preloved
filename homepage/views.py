@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+
+from tickets.models import Ticket
 from .models import *
 # Create your views here.
 
@@ -116,4 +118,18 @@ class CartController:
                 'thumbnail': preloved_secrets.STORAGE + firstItem.slug
             })
         return JsonResponse({'cart':shoppingCart})
+
+    @staticmethod
+    def purchase_all(request):
+        if not request.user.is_authenticated:
+            return return_not_auth
+        if request.method != 'POST':
+            return return_not_post()
+        items = Cart.objects.all()
+        for item in items:
+            userID = request.user
+            userID = ShopUser.objects.get(userID=userID)
+            Ticket.objects.create(userID=userID, storeID=item.item.storeID, itemID=item.item)
+            item.delete()
+        return JsonResponse({'success': True})
 
