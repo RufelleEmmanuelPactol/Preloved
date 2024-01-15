@@ -197,11 +197,14 @@ class TicketController(View):
             return JsonResponse({'error': 'Invalid parameters'})
         status = Status.objects.get(statusID=sID)
         ticket = Ticket.objects.get(ticketID=tID)
-        if status.level >= 3:
+        if status.level == 3:
+            print('Now changing to this')
             ticket.itemID.isTaken = 1
-            service_fee = ticket.itemID.price * 0.15
-            ticket.itemID.storeID.shopOwnerID.balance -= service_fee
+            service_fee = float(ticket.itemID.price) * 0.15
+            ticket.itemID.storeID.shopOwnerID.balance = float(ticket.itemID.storeID.shopOwnerID.balance) - service_fee
+            ticket.itemID.storeID.shopOwnerID.save()
             ticket.itemID.save()
+            ticket.save()
         elif status.level == 2:
             ticket.expected_buyer_fulfillment = timezone.now() + timezone.timedelta(days=5)
             ticket.save()
