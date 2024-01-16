@@ -59,6 +59,12 @@ class PurchaseController:
             item = Item.objects.filter(itemID=itemID).first()
             if item is None:
                 return_id_not_found()
+            tix = Ticket.objects.filter(userID_id=request.user.id, itemID=item)
+            for ticket in tix:
+                if ticket.status.level <= 2:
+                    return JsonResponse({"error": "Cannot add item to card. Pending ticket already exists."},
+                                        status=400)
+
             t = Ticket(itemID=item, status=Status.objects.filter(statusID=1).first(), storeID=storeID, userID =shopUser, expected_seller_fulfillment=(timezone.now() + timezone.timedelta(days=5)))
             t.save()
             item.save()
