@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 
 from tickets.models import Ticket
 from .models import *
@@ -85,6 +86,10 @@ class CartController:
             return return_not_post()
         item = request.POST.get('itemID')
         item = Item.objects.get(itemID=item)
+        tix = Ticket.objects.filter(userID_id=request.user.id, itemID=item)
+        for ticket in tix:
+            if ticket.status.level <= 2:
+                return JsonResponse({"error": "Cannot add item to card. Pending ticket already exists."}, status=400)
         Cart(user=request.user, item=item).save()
         return JsonResponse({'success': True})
 
@@ -127,9 +132,13 @@ class CartController:
             return return_not_post()
         items = Cart.objects.all()
         for item in items:
-            userID = request.user
-            userID = ShopUser.objects.get(userID=userID)
-            Ticket.objects.create(userID=userID, storeID=item.item.storeID, itemID=item.item)
-            item.delete()
+            try:
+                userID = ShopUser.objects.get(id=request.user.id)
+                Ticket.objects.create(userID=userID, storeID=item.item.storeID, itemID=item.item,
+                                      expected_seller_fulfillment=timezone.now() + timezone.timedelta(5)).save()
+                item.delete()
+            except Exception as e:
+                print(e)
+
         return JsonResponse({'success': True})
 
