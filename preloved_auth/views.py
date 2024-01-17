@@ -2,6 +2,8 @@
 import secrets
 import string
 import os
+
+import django.db
 from django.views.decorators.csrf import get_token
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -459,7 +461,13 @@ class LocationController:
         if owner is not None:
             owner.locationID = location
             owner.save()
-            store = Store.objects.get(ownerID=owner)
+            with django.db.connection.cursor() as cursor:
+                query = f"""
+                SELECT storeID from store_store where {owner.id} = shopOwnerID_id
+                """
+                cursor.execute(query)
+                _id = cursor.fetchone()[0]
+                store = Store.objects.get(id=_id)
             store.locationID = location
             store.save()
             return JsonResponse({'success': True})

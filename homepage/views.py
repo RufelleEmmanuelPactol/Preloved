@@ -11,6 +11,7 @@ from store.models import *
 from store.views import return_not_auth, return_not_post, return_id_not_found
 from preloved import preloved_secrets
 
+
 class HomePageController:
 
     @staticmethod
@@ -49,7 +50,7 @@ class HomePageController:
             map['images'] = images
             image_slugs = Slug.objects.filter(itemID=item, isDeleted=0)
             for slug in image_slugs:
-                images.append({'link': HomePageController.generate_link(slug.slug), 'slugID' : slug.slugID})
+                images.append({'link': HomePageController.generate_link(slug.slug), 'slugID': slug.slugID})
             item_list.append(map)
 
         return item_list
@@ -57,7 +58,6 @@ class HomePageController:
     @staticmethod
     def generate_link(slug):
         return preloved_secrets.STORAGE + slug
-
 
     @staticmethod
     def search(request):
@@ -73,7 +73,6 @@ class HomePageController:
                 'name': result[1]
             })
         return JsonResponse({'results': query_result})
-
 
 
 class CartController:
@@ -122,12 +121,10 @@ class CartController:
                 'size': item.item.size.sizeType,
                 'thumbnail': preloved_secrets.STORAGE + firstItem.slug
             })
-        return JsonResponse({'cart':shoppingCart})
+        return JsonResponse({'cart': shoppingCart})
 
     @staticmethod
     def purchase_all(request):
-        if not request.user.is_authenticated:
-                return return_not_auth()
         if request.method != 'POST':
             return return_not_post()
         items = Cart.objects.all()
@@ -140,4 +137,3 @@ class CartController:
                 print('WHY? ', e)
 
         return JsonResponse({'success': True})
-
