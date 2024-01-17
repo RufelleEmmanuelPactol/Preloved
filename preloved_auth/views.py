@@ -448,7 +448,7 @@ def get_link(request):
     return JsonResponse(resulant)
 
 
-
+from store.models import Store
 class LocationController:
 
     @staticmethod
@@ -467,7 +467,7 @@ class LocationController:
                 """
                 cursor.execute(query)
                 _id = cursor.fetchone()[0]
-                store = Store.objects.get(id=_id)
+                store = Store.objects.filter(storeID=_id).first()
             store.locationID = location
             store.save()
             return JsonResponse({'success': True})
@@ -478,16 +478,18 @@ class LocationController:
 
     @staticmethod
     def get_location_link(request):
-        shopUser = ShopUser.objects.get(userID=request.user)
+        from store.models import Store
+        shopUser = ShopUser.objects.get(userID=request.user.id)
         shopID = request.GET.get('shopID')
         if shopID is None:
             return JsonResponse({'error' : 'invalid shop id'})
         store = Store.objects.get(storeID=shopID)
         if store.locationID.latitude is None or store.locationID.longitude is None:
             return JsonResponse({'error' : 'Shop does not have inferred location yet'})
+
         return JsonResponse({'path':
-                             LocationController.generate_maps_link(shopUser.locationID.latitude,
-                                                                   shopUser.locationID.longitude,
+                             LocationController.generate_maps_link(request.GET.get('lat'),
+                                                                   request.GET.get('long'),
                                                                    store.locationID.latitude,
                                                                    store.locationID.longitude)})
 

@@ -42,6 +42,7 @@ class Store(models.Model):
     ownerID = models.ForeignKey(ShopOwner, on_delete=models.CASCADE)
 
 
+
 class Staff(models.Model):
     uID = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
 
