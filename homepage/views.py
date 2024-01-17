@@ -118,6 +118,7 @@ class CartController:
                 'itemID': item.item.itemID,
                 'price': item.item.price,
                 'storeName': item.item.storeID.storeName,
+                'storeID': item.item.storeID.storeID,
                 'size': item.item.size.sizeType,
                 'thumbnail': preloved_secrets.STORAGE + firstItem.slug
             })
