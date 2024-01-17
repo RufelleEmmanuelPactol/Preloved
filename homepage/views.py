@@ -125,8 +125,8 @@ class CartController:
 
     @staticmethod
     def purchase_all(request):
-        if request.method != 'POST':
-            return return_not_post()
+        if not request.user.is_authenticated:
+            return return_not_auth()
         items = Cart.objects.all()
         for item in items:
             try:
