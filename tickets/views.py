@@ -65,7 +65,7 @@ class PurchaseController:
                     return JsonResponse({"error": "Cannot add item to card. Pending ticket already exists."},
                                         status=400)
 
-            t = Ticket(itemID=item, status=Status.objects.filter(statusID=1).first(), storeID=storeID, userID =shopUser, expected_seller_fulfillment=(timezone.now() + timezone.timedelta(days=5)))
+            t = Ticket(itemID=item, status=Status.objects.filter(statusID=1).first(), storeID=storeID, userID =request.user, expected_seller_fulfillment=(timezone.now() + timezone.timedelta(days=5)))
             t.save()
             item.save()
             return JsonResponse({'response' : 'OK!', 'ticketID' : t.ticketID})
@@ -90,6 +90,7 @@ class TicketController(View):
         ticket_result = Ticket.objects.filter(storeID=shop)
         tickets = []
         for ticket in ticket_result:
+            shopuser = ShopUser.objects.get(userID=request.user)
             tickets.append(
                 {
                     'ticketID': ticket.ticketID,
@@ -98,11 +99,11 @@ class TicketController(View):
                     'statusID': ticket.status.statusID,
                     'currentStatusName': ticket.status.status_name,
                     'itemID': ticket.itemID.itemID,
-                    'userID': ticket.userID.userID.id,
-                    'customerFirstName': ticket.userID.userID.first_name,
-                    'customerLastName': ticket.userID.userID.last_name,
-                    'customerEmail': ticket.userID.userID.email,
-                    'customerPhone': ticket.userID.phone_no,
+                    'userID': ticket.userID.id,
+                    'customerFirstName': ticket.userID.first_name,
+                    'customerLastName': ticket.userID.last_name,
+                    'customerEmail': ticket.userID.email,
+                    'customerPhone': shopuser.phone_no
                 }
             )
         return JsonResponse({'tickets': tickets})
@@ -111,10 +112,9 @@ class TicketController(View):
         userID = request.POST.get('userID')
         itemID = request.POST.get('itemID')
         userID = User.objects.get(id=userID)
-        userID = ShopUser.objects.get(userID=userID)
         itemID = Item.objects.get(itemID=itemID)
         print(userID, itemID, 'details')
-        if userID is None or itemID is None:
+        if itemID is None:
             return JsonResponse({'error': 'shopUserID and itemID are required'}, status=400)
         Ticket.objects.create(userID=userID, storeID=itemID.storeID, itemID=itemID)
         return JsonResponse({'status': 'OK!'})
@@ -223,3 +223,14 @@ class TicketController(View):
         ticket.status = status
         ticket.save()
         return JsonResponse({'success': True})
+
+    @staticmethod
+    def drop_ticket(request):
+        user = request.user.id
+        ticketID = request.POST.get('ticketID')
+        ticket: Ticket = Ticket.objects.filter(ticketID=ticketID).first()
+        if ticket.userID == user:
+            ticket.delete()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False})

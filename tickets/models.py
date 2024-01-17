@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
@@ -15,7 +16,7 @@ class Status(models.Model):
 
 class Ticket(models.Model):
     ticketID = models.AutoField(primary_key=True)
-    userID = models.ForeignKey(ShopUser, on_delete=models.CASCADE, related_name='tickets', default=0)
+    userID = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets', default=0)
     storeID = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='tickets')
     itemID = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='tickets')
     status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='tickets', default=1)

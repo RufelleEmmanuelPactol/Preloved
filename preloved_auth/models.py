@@ -3,8 +3,8 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class Location(models.Model):
-    latitude = models.DecimalField(decimal_places=7, max_digits=8, null=True)
-    longitude = models.DecimalField(decimal_places=7, max_digits=8, null=True)
+    latitude = models.CharField(max_length=256, null=True, blank=True)
+    longitude = models.CharField(max_length=256, null=True, blank=True)
     name = models.CharField(max_length=256, null=True)
     address_plain = models.CharField(max_length=1086)
 

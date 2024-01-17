@@ -127,18 +127,17 @@ class CartController:
     @staticmethod
     def purchase_all(request):
         if not request.user.is_authenticated:
-            return return_not_auth
+            return return_not_auth()
         if request.method != 'POST':
             return return_not_post()
         items = Cart.objects.all()
         for item in items:
             try:
-                userID = ShopUser.objects.get(id=request.user.id)
-                Ticket.objects.create(userID=userID, storeID=item.item.storeID, itemID=item.item,
+                Ticket.objects.create(userID=request.user, storeID=item.item.storeID, itemID=item.item,
                                       expected_seller_fulfillment=timezone.now() + timezone.timedelta(5)).save()
                 item.delete()
             except Exception as e:
-                print(e)
+                print('WHY? ', e)
 
         return JsonResponse({'success': True})
 
