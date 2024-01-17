@@ -132,7 +132,7 @@ class TicketController(View):
                     ticket_obj.status = Status.objects.get(statusID=8)
                     ticket_obj.status.save()
                     ticket_obj.save()
-            ticket['userID'] = ticket_obj.userID.userID.id
+            ticket['userID'] = ticket_obj.userID.id
             ticket['storeID'] = ticket_obj.storeID.storeID
             ticket['itemID'] = ticket_obj.itemID.itemID
             ticket['createdAt'] = ticket_obj.created
