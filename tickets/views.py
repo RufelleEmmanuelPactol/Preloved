@@ -85,7 +85,7 @@ class TicketController(View):
         ticket_result = Ticket.objects.filter(storeID=shop)
         tickets = []
         for ticket in ticket_result:
-            shopuser = ShopUser.objects.get(userID=request.user)
+            shopuser = ShopUser.objects.get(userID=ticket.userID)
             tickets.append(
                 {
                     'ticketID': ticket.ticketID,
