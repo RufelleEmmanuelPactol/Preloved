@@ -48,17 +48,12 @@ class PurchaseController:
             if not request.user.is_authenticated:
                 return return_not_auth()
             id = request.user.id
-            shopUser = ShopUser.objects.filter(id=id).first()
-            if shopUser is None:
-                return JsonResponse({'error': 'user is not a shop user'}, status=400)
+
             itemID = int(request.POST.get('itemID'))
-            storeID = int(request.POST.get('storeID'))
-            storeID = Store.objects.filter(storeID=storeID).first()
-            if storeID is None:
-                return return_id_not_found()
-            item = Item.objects.filter(itemID=itemID).first()
+            item: Item = Item.objects.filter(itemID=itemID).first()
             if item is None:
                 return_id_not_found()
+            storeID = item.storeID
             tix = Ticket.objects.filter(userID_id=request.user.id, itemID=item)
             for ticket in tix:
                 if ticket.status.level <= 2:
@@ -70,7 +65,7 @@ class PurchaseController:
             item.save()
             return JsonResponse({'response' : 'OK!', 'ticketID' : t.ticketID})
         except Exception as e:
-            raise e
+
             return JsonResponse({'error': str(e)}, status=400)
 
 
@@ -155,15 +150,15 @@ class TicketController(View):
                 ticket['statusINT'] = status_obj.level
             return JsonResponse(ticket)
         if userID is not None:
-            user = ShopUser.objects.get(id=userID)
-            tickets = Ticket.objects.filter(userID=user)
+            user = ShopUser.objects.get(userID=request.user)
+            tickets = Ticket.objects.filter(userID=request.user )
             ticket_list = []
             print(tickets)
 
             for ticket_obj in tickets:
                 ticket_data = {
                     'ticketID': ticket_obj.ticketID,
-                    'userID': ticket_obj.userID.userID.id,
+                    'userID': ticket_obj.userID.id,
                     'storeID': ticket_obj.storeID.storeID,
                     'itemID': ticket_obj.itemID.itemID,
                     'status': ticket_obj.status.status_name,
