@@ -1,7 +1,8 @@
 from django.db import models
 from preloved_auth.models import Location, ShopOwner
-# Create your models here.
 
+
+# Create your models here.
 
 
 class Store(models.Model):
@@ -13,6 +14,11 @@ class Store(models.Model):
     def __str__(self):
         return self.storeName
 
+
+class Size(models.Model):
+    sizeType = models.CharField(max_length=10)
+
+
 class Item(models.Model):
     itemID = models.AutoField(primary_key=True)
     storeID = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='items')
@@ -21,10 +27,11 @@ class Item(models.Model):
     isFeminine = models.BooleanField(default=True)
     price = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     isTaken = models.IntegerField(default=0)
-
+    size = models.ForeignKey(Size, on_delete=models.SET_NULL, default=1, null=True)
 
     def __str__(self):
         return self.name
+
 
 class Tag(models.Model):
     tagID = models.AutoField(primary_key=True)
@@ -47,7 +54,7 @@ class ItemTag(models.Model):
 
 class Slug(models.Model):
     slugID = models.AutoField(primary_key=True)
-    slug = models.CharField(unique=True, max_length=1048)
+    slug = models.CharField(unique=True, max_length=255)
     itemID = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='slugs')
     isDeleted = models.IntegerField(default=0)
     isThumbnail = models.IntegerField(default=0)
@@ -56,7 +63,8 @@ class Slug(models.Model):
         return self.slug
 
 
-
-
-
+class LoadVoucher(models.Model):
+    voucher_code = models.CharField(max_length=20)
+    value = models.IntegerField()
+    is_redeemed = models.IntegerField(default=0)
 

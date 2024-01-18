@@ -1,6 +1,9 @@
 from django.urls import include, path
 from .views import TicketController, PurchaseController
 urlpatterns = [
-    path('ticket/', TicketController.as_view()),
+    path('ticket', TicketController.as_view()),
     path('purchase_item', PurchaseController.purchase_item),
+    path('statuses', TicketController.get_statuses),
+    path('update_ticket_status', TicketController.update_ticket_status),
+    path('get_shop_tickets', TicketController.get_shop_ids)
 ]

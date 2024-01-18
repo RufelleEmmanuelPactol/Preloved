@@ -22,5 +22,7 @@ urlpatterns = [
     path('auth/', include('preloved_auth.urls')),
     path('storage/', include('storage.urls')),
     path('tickets/', include('tickets.urls')),
-    path('store/', include('store.urls'))
+    path('store/', include('store.urls')),
+    path('homepage/', include('homepage.urls')),
+    path('collections/', include('preloved_collections.urls'))
 ]

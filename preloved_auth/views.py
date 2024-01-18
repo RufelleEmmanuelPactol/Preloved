@@ -2,12 +2,15 @@
 import secrets
 import string
 import os
+
+import django.db
 from django.views.decorators.csrf import get_token
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 
-from .models import ShopUser, ShopOwner, Location, ShopVerification, Staff
+from preloved import preloved_secrets
+from .models import ShopUser, ShopOwner, Location, ShopVerification, Staff, Store
 from django.core.files.storage import default_storage as storage
 from django.core.files.base import ContentFile
 from datetime import datetime
@@ -53,8 +56,12 @@ class LoginController:
                     value['user_type'] = 'Verification Officer'
                     value['user_type_int'] = 2
                 else:
+                    shop_ver_instance = ShopVerification.objects.filter(shopOwnerID=s.id).first()
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
+                    value['verified'] = shop_ver_instance.status
+                    value['shop_owner_id'] = s.id
+
             value['sessionID'] =  request.COOKIES.get('sessionid')
             return JsonResponse(value)
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
@@ -164,8 +171,6 @@ class SignUpController:
             slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
-            if file_path is not None:
-                return return_not_auth()
             slugs.idSlug2 = file_path
             slugs.save()
             return JsonResponse({'response': 'Ok!'})
@@ -180,8 +185,6 @@ class SignUpController:
             slugs = ShopVerification.objects.filter(shopOwnerID=shop_owner).first()
             file = request.FILES['file']
             file_path = storage_worker.upload_in_namespace(request, file, namespace='verification/', slug=file.name)
-            if file_path is not None:
-                return return_not_auth()
             slugs.selfieSlug = file_path
             slugs.save()
             return JsonResponse({'response': 'Ok!'})
@@ -203,13 +206,11 @@ class VerificationController:
 
         if not owner:
             response['status'] = 'not found'
-        elif owner.idSlug1 is None or owner.idSlug2 is None or owner.selfieSlug is None:
-            response['status'] = 'incomplete'
-        elif owner.idSlug1 is None:
+        elif owner.idSlug1 == '':
             response['status'] = 'id 1 is missing'
-        elif owner.idSlug2 is None:
+        elif owner.idSlug2 == '':
             response['status'] = 'id 2 is missing'
-        elif owner.selfieSlug is None:
+        elif owner.selfieSlug == '':
             response['status'] = 'selfie is missing'
         else:
             response['status'] = 'complete'
@@ -335,6 +336,7 @@ class VerificationController:
             elif s is None:
                 value['user_type'] = 'Shop User'
                 value['user_type_int'] = 0
+                value['shop_user_id'] = ShopUser.objects.get(userID=request.user).id
             else:
                 staff = Staff.objects.filter(uID=request.user).first()
                 if staff is not None:
@@ -343,6 +345,8 @@ class VerificationController:
                 else:
                     value['user_type'] = 'Shop Owner'
                     value['user_type_int'] = 1
+                    value['verified'] = s.isVerified
+                    value['shop_owner_id'] = s.id
 
 
 
@@ -426,3 +430,77 @@ def approve_or_reject(request):
 
 def get_current_user(request):
     return verificationController.get_current_user(request)
+
+
+def get_link(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'error' : 'insufficient credentials'})
+    id = request.GET.get('id')
+    shop = ShopOwner.objects.filter(id=int(id)).first()
+    if shop is None:
+        return JsonResponse({'error': 'user is not shop owner'})
+    verification = ShopVerification.objects.filter(shopOwnerID=shop).first()
+    links = []
+    resulant = {'result': links}
+    links.append(preloved_secrets.STORAGE+verification.idSlug1)
+    links.append(preloved_secrets.STORAGE + verification.idSlug2)
+    links.append(preloved_secrets.STORAGE + verification.selfieSlug)
+    return JsonResponse(resulant)
+
+
+from store.models import Store
+class LocationController:
+
+    @staticmethod
+    def attach_location(request):
+        if not request.user.is_authenticated:
+            return return_not_auth()
+        location = Location(longitude=request.POST.get('long'), latitude=request.POST.get('lat'))
+        location.save()
+        owner:ShopOwner = ShopOwner.objects.filter(userID=request.user).first()
+        if owner is not None:
+            owner.locationID = location
+            owner.save()
+            with django.db.connection.cursor() as cursor:
+                query = f"""
+                SELECT storeID from store_store where {owner.id} = shopOwnerID_id
+                """
+                cursor.execute(query)
+                _id = cursor.fetchone()[0]
+                store = Store.objects.filter(storeID=_id).first()
+            store.locationID = location
+            store.save()
+            return JsonResponse({'success': True})
+
+        user = ShopUser.objects.get(userID=request.user)
+        user.locationID = location
+        return JsonResponse({'success': True})
+
+    @staticmethod
+    def get_location_link(request):
+        from store.models import Store
+        shopUser = ShopUser.objects.get(userID=request.user.id)
+        shopID = request.GET.get('shopID')
+        if shopID is None:
+            return JsonResponse({'error' : 'invalid shop id'})
+        store = Store.objects.get(storeID=shopID)
+        if store.locationID.latitude is None or store.locationID.longitude is None:
+            return JsonResponse({'error' : 'Shop does not have inferred location yet'})
+
+        return JsonResponse({'path':
+                             LocationController.generate_maps_link(request.GET.get('lat'),
+                                                                   request.GET.get('long'),
+                                                                   store.locationID.latitude,
+                                                                   store.locationID.longitude)})
+
+
+    @staticmethod
+    def generate_maps_link(origin_lat, origin_lng, destination_lat, destination_lng):
+        base_url = "https://www.google.com/maps/dir/?api=1"
+        origin = f"origin={origin_lat},{origin_lng}"
+        destination = f"destination={destination_lat},{destination_lng}"
+        maps_link = f"{base_url}&{origin}&{destination}"
+        return maps_link
+
+
+

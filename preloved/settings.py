@@ -46,7 +46,9 @@ INSTALLED_APPS = [
     'preloved_auth',
     'corsheaders',
     'store',
-    'tickets'
+    'tickets',
+    'homepage',
+    'preloved_collections'
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_EXPOSE_HEADERS = ["Set-Cookie"]
@@ -60,6 +62,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     "http://127.0.0.1:5173",
 ]
+
+APPEND_SLASH = False
 
 
 # settings.py
@@ -83,7 +87,7 @@ LOGGING = {
 
 DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
 AZURE_ACCOUNT_NAME = secrets.AZURE_ACCOUNT_NAME
-AZURE_ACCOUNT_KEY = secrets.AZURE_ACCOUNT_KEY
+AZURE_ACCOUNT_KEY = secrets.AZURE_ACCOUNT_KEY_1
 AZURE_CONTAINER = secrets.AZURE_CONTAINER
 AZURE_CUSTOM_DOMAIN = f"{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
 
@@ -131,20 +135,21 @@ WSGI_APPLICATION = 'preloved.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': secrets.DATABASE,
+        'USER': secrets.USER,
         'PASSWORD': secrets.PASSWORD,
         'HOST': secrets.SERVER,
-        'USER': secrets.USER,
         'PORT': secrets.PORT,
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
+
+
 
 
 

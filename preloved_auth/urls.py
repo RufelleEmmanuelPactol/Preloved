@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from django.urls import path, include
-from .views import new_shop_user, csrf_token, loginAPI, logout_attempt, is_logged_in, shop_id_selfie, shop_id_two, shop_id_one, new_shop_owner, get_image, document_status, get_shop_owner_details, get_list_pending
-from .views import approve_or_reject, get_current_user, generate_id
+# from .views import new_shop_user, csrf_token, loginAPI, logout_attempt, is_logged_in, shop_id_selfie, shop_id_two, shop_id_one, new_shop_owner, get_image, document_status, get_shop_owner_details, get_list_pending
+from .views import *
 urlpatterns = [
     path('generate_id', generate_id),
     path('new_shop_user', new_shop_user),
@@ -19,6 +19,9 @@ urlpatterns = [
     path('verification/document_status', document_status),
     path('verification/get_shop_owner_details', get_shop_owner_details),
     path('verification/get_list_pending', get_list_pending),
-    path('verification/approve_or_reject', approve_or_reject)
+    path('verification/approve_or_reject', approve_or_reject),
+    path('verification/test_for_links', get_link),
+    path('location/attach_location', LocationController.attach_location),
+    path('location/get_route', LocationController.get_location_link)
 
 ]
